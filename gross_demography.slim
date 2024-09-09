@@ -1,0 +1,36 @@
+// set up a simple neutral simulation
+initialize() {
+	initializeMutationRate(1e-7);
+	
+	// m1 mutation type: neutral
+	initializeMutationType("m1", 0.5, "f", 0.0);
+	
+	// g1 genomic element type: uses m1 for all mutations
+	initializeGenomicElementType("g1", m1, 1.0);
+	
+	// uniform chromosome of length 100 kb with uniform recombination
+	initializeGenomicElement(g1, 0, 9999999);
+	initializeRecombinationRate(1e-7);
+}
+
+// create a population of 500 individuals
+1 late() {
+sim.readFromPopulationFile("~/Documents/arg_selection/gross_burnin.trees");
+sim.addSubpopSplit("p1", asInteger(p0.individualCount/2), p0);
+
+}
+
+
+500 late(){
+sim.addSubpopSplit("p2", asInteger(p1.individualCount/2), p1);
+}
+
+1000 late(){
+sim.addSubpopSplit("p12", asInteger(p1.individualCount/2), p1);
+sim.addSubpopSplit("p22", asInteger(p2.individualCount/2), p2);
+
+}
+// output samples of 10 genomes periodically, all fixed mutations at end
+1000 late() { p1.outputSample(10); }
+2000 late() { p1.outputSample(10); }
+2000 late() { sim.outputFixedMutations(); }
