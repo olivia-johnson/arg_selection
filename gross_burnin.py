@@ -26,7 +26,7 @@ burnin = msprime.sim_ancestry(samples=sN, population_size=sN, recombination_rate
 burnin_ts = pyslim.annotate(burnin, model_type="WF", tick=1,    stage="late")
 burnin_ts.dump("/Users/olj5016/Documents/arg_selection/gross_burnin.trees")
 
-params="p{0}_t{1}_s{2}_f{3}_sS{4}.txt".format(selPop, selTime, sS, cF, sampleSize)
+params="p{0}_t{1}_s{2}_f{3}_sS{4}".format(selPop, selTime, sS, cF, sampleSize)
 
 cmd = "slim -d s=" + str(sS) + " -d sampleSize=" + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) + " -d cF=" + str(cF)+ " ~/arg_selection/gross_demography.slim"
 print(cmd)
@@ -86,8 +86,8 @@ alleleCounts.to_string(buf = filename, index=False)
 
 reformat="Rscript /Users/olj5016/arg_selection/gross_analysis.R {0}".format(filename)
 os.system(reformat)
-
-grosscmd="Rscript /Users/olj5016/Documents/arg_selection/GRoSS-master/GRoSS.R -e {0} -d /Users/olj5016/Documents/arg_selection/treeGross.dot -o /Users/olj5016/Documents/arg_selection/gross_out_{1}.tsv".format(filename, params)
+os.chdir("/Users/olj5016/Documents/arg_selection/GRoSS-master/")
+grosscmd="Rscript GRoSS.R -e {0} -d /Users/olj5016/Documents/arg_selection/treeGross.dot -o /Users/olj5016/Documents/arg_selection/gross_out_{1}.tsv".format(filename, params)
 os.system(grosscmd)
 
     
