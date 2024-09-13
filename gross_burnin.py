@@ -11,7 +11,7 @@ scaling=10 # scale parameters by 10
 Ne=10000 # unscaled Ne
 rr=1e-8 # unscaled recombination rate
 mr=1e-8 # unscaled mutation rate
-s=0.01 # selection coefficient (0.0 for neutral)
+s=0.1 # selection coefficient (0.0 for neutral)
 sampleSize=4 # number of indidivuals remebered in tree per generation
 selPop=2 # subset value for subpopulation in SLiM 2 for p2, 4 for p22
 selTime=500 # time of selection (generations)
@@ -26,11 +26,13 @@ burnin = msprime.sim_ancestry(samples=sN, population_size=sN, recombination_rate
 burnin_ts = pyslim.annotate(burnin, model_type="WF", tick=1,    stage="late")
 burnin_ts.dump("/Users/olj5016/Documents/arg_selection/gross_burnin.trees")
 
+params="p{0}_t{1}_s{2}_f{3}_sS{4}.txt".format(selPop, selTime, sS, cF, sampleSize)
+
 cmd = "slim -d s=" + str(sS) + " -d sampleSize=" + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) + " -d cF=" + str(cF)+ " ~/arg_selection/gross_demography.slim"
 print(cmd)
 os.system(cmd)
 
-ts = tskit.load("/Users/olj5016/Documents/arg_selection/simtree_p{0}_t{1}_s{2}_f{3}_sS{4}.trees".format(selPop, selTime, sS, cF, sampleSize))
+ts = tskit.load("/Users/olj5016/Documents/arg_selection/simtree_{0}.trees".format(params))
 
 ## SUMMARISE INDIVIDUALS - obtain metadata for individuals 'remembered' in ts
 rows_list = []
@@ -79,10 +81,14 @@ for p in set(ind_met['pop']):
                 dict2.update({"pop": p, "time":pyslim.slim_time(mut_ts, t), "pos":sites[i], "A":samp_ac[i,0], "a":samp_ac[i,1]})
                 rows_list2.append(dict2)
 alleleCounts=pd.DataFrame(rows_list2)
-alleleCounts.to_string(buf = "/Users/olj5016/Documents/arg_selection/ac_p{0}_t{1}_s{2}_f{3}_sS{4}.txt".format(selPop, selTime, sS, cF, sampleSize), index=False)
+filename="/Users/olj5016/Documents/arg_selection/ac_{0}.txt".format(params)
+alleleCounts.to_string(buf = filename, index=False)
 
+reformat="Rscript /Users/olj5016/arg_selection/gross_analysis.R {0}".format(filename)
+os.system(reformat)
 
-
+grosscmd="Rscript /Users/olj5016/Documents/arg_selection/GRoSS-master/GRoSS.R -e {0} -d /Users/olj5016/Documents/arg_selection/treeGross.dot -o /Users/olj5016/Documents/arg_selection/gross_out_{1}.tsv".format(filename, params)
+os.system(grosscmd)
 
     
 #from IPython.display import display
