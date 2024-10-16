@@ -5,7 +5,7 @@ initialize() {
 	initializeMutationRate(0.0); // no mutation of selected alleles
 	
 	if (!exists("s")){
-		defineConstant("s", 0.1);}
+		defineConstant("s", 0.0);}
 	
 	if (!exists("sampleSize")){
 		defineConstant("sampleSize", 4);}
@@ -54,12 +54,12 @@ late(){
 		selInd.genomes.addNewDrawnMutation(m1, 5e6, originSubpop=selPop);
 	}
 	
-	if(sim.cycle%500==499.0){
-		for (p in sim.subpopulations){
-			rInd=sample(p.individuals, sampleSize);
-			sim.treeSeqRememberIndividuals(rInd);
-		}
-	}
+	//	if(sim.cycle%500==499.0){
+	//		for (p in sim.subpopulations){
+	//			rInd=sample(p.individuals, sampleSize);
+	//			sim.treeSeqRememberIndividuals(rInd);
+	//		}
+	//	}
 	
 	if (s>0.0){if (sim.cycle>selTime){
 			if(size(sim.mutationFrequencies(sim.subpopulations[selPop]))==0){
@@ -68,20 +68,28 @@ late(){
 		}
 	}
 }
-
-//1000 late(){
-//sim.addSubpopSplit("p12", asInteger(p1.individualCount/2), p1);
-//sim.addSubpopSplit("p22", asInteger(p2.individualCount/2), p2);
 //
-//}
-// output samples of 10 genomes periodically, all fixed mutations at end
 1000 late(){
+sim.addSubpopSplit("p12", asInteger(p1.individualCount/2), p1);
+sim.addSubpopSplit("p22", asInteger(p2.individualCount/2), p2);
+//
+}
+// output samples of 10 genomes periodically, all fixed mutations at end
+1500 late(){
+	
+	for (p in sim.subpopulations){
+		rInd=sample(p.individuals, sampleSize);
+		sim.treeSeqRememberIndividuals(rInd);
+	}
+	
 	if (s>0.0){
 		if (sim.mutationFrequencies(sim.subpopulations[selPop]) >= cF){
 			
 			sim.treeSeqOutput(paste0("~/Documents/arg_selection/simtree_p",selPop,"_t",selTime,"_s",s,"_f",cF, "_sS",sampleSize,".trees"));
 		} else{
 			sim.readFromPopulationFile("~/Documents/arg_selection/gross_burnin.trees");
-		}
+		}}
+	else{
+		sim.treeSeqOutput(paste0("~/Documents/arg_selection/simtree_p",selPop,"_t",selTime,"_s",s,"_f",cF, "_sS",sampleSize,".trees"));
 	}
 }
