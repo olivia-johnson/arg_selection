@@ -11,8 +11,8 @@ scaling=10 # scale parameters by 10
 Ne=10000 # unscaled Ne
 rr=1e-8 # unscaled recombination rate
 mr=1e-8 # unscaled mutation rate
-s=0.0 # selection coefficient (0.0 for neutral)
-sampleSize=4 # number of indidivuals remebered in tree per generation
+s=0.1 # selection coefficient (0.0 for neutral)
+sampleSize=2 # number of indidivuals remebered in tree per generation
 selPop=2 # subset value for subpopulation in SLiM 2 for p2, 4 for p22
 selTime=500 # time of selection (generations)
 cF = 0.1 # condntional frequency of selected allele (only active when s>0.0)
@@ -90,9 +90,116 @@ os.chdir("/Users/olj5016/Documents/arg_selection/GRoSS-master/")
 grosscmd="Rscript GRoSS.R -e {0} -d /Users/olj5016/Documents/arg_selection/treeGross.dot -o /Users/olj5016/Documents/arg_selection/gross_out_{1}.tsv".format(filename, params)
 os.system(grosscmd)
 
-    
-#from IPython.display import display
-#x_limits = [4950000, 5050000]
-#ts.draw_svg(path="/Users/olj5016/Documents/arg_selection/gross_arg.pdf",y_axis=True, x_lim=x_limits)
+simpts=mut_ts.simplify()
+fts=simpts.first()
+fts.draw_svg()
+fts.next()
+fts.draw_svg()
+
+
+from datetime import datetime
+# names = {"YRI": "African", "CEU": "European", "CHB": "Chinese"}
+# colours = {"YRI": "yellow", "CEU": "green", "CHB": "blue"}
+
+# population_map = {p.metadata["id"]: p.id for p in mut_ts.populations()}
+sample_populations = list(sorted({simpts.node(u).population for u in simpts.samples()}))
+topology_span = {tree.rank(): 0 for tree in tskit.all_trees(len(sample_populations))}
+
+start = datetime.now()
+total = 0
+for topology_counter, tree in zip(simpts.count_topologies(), simpts.trees()):
+    embedded_topologies = topology_counter[sample_populations]
+    weight = tree.span / simpts.sequence_length
+    for rank, count in embedded_topologies.items():
+        topology_span[rank] += count * weight
+        total += count
+print(f"Counted {total} embedded topologies in {datetime.now() - start} seconds")
+
+
+# ******************  Simulation Summary  ****************** #
+
+# Specify the output directory for embedded topologies & tree weights
+outDIR = '/Users/olj5016/Documents/arg_selection/'
+topologies_file_path = os.path.join(outDIR, 'embedded_topologies.pickle')
+topologySpan_file_path = os.path.join(outDIR, 'topologySpan.pickle')
+
+population_map = {p.metadata["name"]: p.id for p in mut_ts.populations()}
+sample_populations = list(sorted({mut_ts.node(u).population for u in mut_ts.samples()}))
+population_map
+sample_populations
+#' Afr, EEF, Loschbour & Nean
+sample_populations = [sample_populations[i] for i in range(len(sample_populations))] # Mbuti, LBK, Losch, Nean
+
+
+# Identify all tree topologies for sample populations
+topology_span = {tree.rank(): 0 for tree in tskit.all_trees(len(sample_populations))}
+
+# Traverse the trees & compute the weights for each tree rank (topolgoy)
+from datetime import datetime
+start = datetime.now()
+total = 0
+for topology_counter, tree in zip(mut_ts.count_topologies(), mut_ts.trees()):
+    embedded_topologies = topology_counter[sample_populations]
+    weight = tree.span / mut_ts.sequence_length
+    for rank, count in embedded_topologies.items():
+        topology_span[rank] += count * weight
+        total += count
+print(f"Counted {total} embedded topologies in {datetime.now() - start} seconds")
+# >>> Counted 2865712 embedded topologies in 1 day, 1:35:25.138643 seconds
+
+# Save the embedded_topologies collections.Counter object to a file
+with open(topologies_file_path, 'wb') as f:
+    pickle.dump(embedded_topologies, f)
+
+# Save the topology_span collections.Counter object to a file
+with open(topologySpan_file_path, 'wb') as f:
+    pickle.dump(topology_span, f)
+
+
+
+# Generate Figures of all the topologies & their corresponding weights
+names = {"pop_0" : "P0", 
+         "0" : "P0", 
+         "p1" : "P1",
+         "p2" : "P2",
+         "p12":"P12",
+         "p22":"P22"}
+colours = {"pop_0": "black", 
+           "p1": "red",
+           "p2": "purple",
+           "p12":"blue",
+           "p22":"orange"}
+
+# Ensure the directory exists
+import os
+os.makedirs(outDIR, exist_ok=True)
+ntips = len(sample_populations)
+styles = ".sample text.lab {baseline-shift: super; font-size: 0.7em;}"
+node_labels = {}
+for p in range(ntips):
+    name = mut_ts.population(sample_populations[p]).metadata["name"]
+    node_labels[p] = names[name]
+    styles += f".n{p}>.sym {{fill: {colours[name]} }}"
+total = sum(topology_span.values())
+for rank, weight in topology_span.items():
+    label = f"{weight/total *100:.1f}% of genome"
+    embedded_tree = tskit.Tree.unrank(ntips, rank)
+    filename = f"tree_{rank}_{weight}.svg"
+    t = embedded_tree.draw_svg(size=(300, 300), style="".join(styles), node_labels=node_labels, x_label=label)
+    ## Save the SVG to a file
+    #with open(os.path.join(dir_path, filename), 'w') as f:
+    #    f.write(t)
+    # Save the SVG to a temporary file
+    svg_filename = os.path.join(outDIR, "temp.svg")
+    with open(svg_filename, 'w') as f:
+        f.write(t)
+
+    # Convert SVG to PDF
+    pdf_filename = os.path.join(outDIR, filename + ".pdf")
+    cairosvg.svg2pdf(url=svg_filename, write_to=pdf_filename)
+
+    # Remove the temporary SVG file
+    os.remove(svg_filename)
+
 
 
