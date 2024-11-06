@@ -1,0 +1,112 @@
+// set up a simple neutral simulation
+initialize() {
+	initializeTreeSeq();
+	
+	initializeMutationRate(0.0); // no mutation of selected alleles
+	
+	if (!exists("path")){
+		defineConstant("path", "~/Documents/arg_selection/");}
+	
+	if (!exists("s")){
+		defineConstant("s", 0.06);}
+	
+	if (!exists("sampleSize")){
+		defineConstant("sampleSize", 8);}
+	
+	if (!exists("popSize")){
+		defineConstant("popSize", 10000);}
+	
+	if (!exists("selPop")){
+		defineGlobal("selPop", 2);}
+	
+	if (!exists("selTime")){
+		defineConstant("selTime", 17500);}
+	
+	if (!exists("selEnd")){
+		defineConstant("selEnd", 20000);}
+	
+	if (!exists("cF")){
+		defineConstant("cF", 0.1);}
+	
+	if (!exists("admix")){
+		defineConstant("admix", 0);}
+	
+	defineGlobal("label", paste0("s",s,"_sT",selTime,"_sE", selEnd,"_sP",selPop, "_cF", cF, "_admix",admix));
+	
+	
+	// m1 mutation type: selected mutation
+	initializeMutationType("m1", 0.5, "f", s); // selected mutations
+	
+	m1.color="pink";
+	
+	
+	// g1 genomic element type: uses m1 for all mutations
+	initializeGenomicElementType("g1", m1, 1.0);
+	
+	// uniform chromosome of length 10Mb with uniform recombination
+	initializeGenomicElement(g1, 0, 9999999);
+	initializeRecombinationRate(1e-7);
+}
+1 late() {
+	sim.readFromPopulationFile(paste0(path, "burnin_simple_",label,".trees"));
+}
+
+
+2 early() {
+	sim.addSubpopSplit("p1", popSize, p0);
+
+}
+
+17500 late(){
+	sim.addSubpopSplit("p2", popSize, p1);
+	//
+}
+
+
+19000 late(){
+	if (admix!=0){
+		p1.setMigrationRates(p0, admix);
+	}}
+late(){
+	modSel=sim.cycle%selTime;
+	if(modSel==(selTime-1)){
+		sim.treeSeqOutput(paste0(path,"tmp",label,".trees"));}
+	if (modSel==0){
+		selInd=sample(sim.subpopulations[selPop].individuals, 1);
+		selInd.genomes.addNewDrawnMutation(m1, 5e6, originSubpop=selPop);
+	}
+	
+	if (sim.cycle==selEnd){
+		sim.mutationsOfType(m1).setSelectionCoeff(0.0);
+	}
+	
+	if(sim.cycle%2500==0){
+		for (p in sim.subpopulations){
+			rInd=sample(p.individuals, sampleSize);
+			sim.treeSeqRememberIndividuals(rInd);
+		}
+	}
+	
+	if (s>0.0){if (sim.cycle>selTime){
+			if(size(sim.mutations)==0){
+				sim.readFromPopulationFile(paste0(path,"tmp",label,".trees"));
+			}
+		}
+	}
+}
+//
+
+
+20001 late(){
+	
+	if (s>0.0){
+		if (sim.mutationFrequencies(sim.subpopulations[selPop]) >= cF){
+			
+			sim.treeSeqOutput(paste0(path, "simplegross_", label,".trees"));
+		} else{
+			sim.readFromPopulationFile(paste0(path,"tmp",label,".trees"));
+		}}
+	else{
+		sim.treeSeqOutput(paste0(path,"simplegross_",label,".trees"));
+	}
+}
