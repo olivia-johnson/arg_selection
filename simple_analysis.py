@@ -23,19 +23,20 @@ selTime=17500 # time of selection (generations)
 selEnd=20000 # time of selection (generations)
 cF = 0.1 # condntional frequency of selected allele (only active when s>0.0)
 admixture=0 ## admixture proportion set to 0 to turn admixture off
+rep=0
 
 # sN=Ne/scaling # scaled N
 # sR=rr*scaling # scaled rr
 # sM=mr*scaling # scaled mr
 # sS=s*scaling # scaled s
 
-params="s{0}_sT{1}_sE{2}_sP{3}_cF{4}_admix{5}".format(s,selTime, selEnd,selPop, cF, admixture)
+params="{6}_s{0}_sT{1}_sE{2}_sP{3}_cF{4}_admix{5}".format(s,selTime, selEnd,selPop, cF, admixture,rep)
 
 burnin = msprime.sim_ancestry(samples=Ne, population_size=Ne, recombination_rate=rr, sequence_length=1e7)
 burnin_ts = pyslim.annotate(burnin, model_type="WF", tick=1,    stage="late")
 burnin_ts.dump("{0}burnin_simple_{1}.trees".format(path,params))
 
-cmd = "slim -d s=" + str(s) + " -d admix="+ str(admixture)+" -d sampleSize=" + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) + " -d cF=" + str(cF)+ " ~/arg_selection/simple_gross.slim"
+cmd = "slim -d s=" + str(s) + " -d rep="+str(rep)+" -d admix="+ str(admixture)+" -d sampleSize=" + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) + " -d cF=" + str(cF)+ " ~/arg_selection/simple_gross.slim"
 print(cmd)
 os.system(cmd)
 
@@ -64,6 +65,11 @@ ind_met = pd.DataFrame(rows_list)
 
 ind_times = np.unique(ts.individual_times).astype(int)
 
+mut_ts = msprime.sim_mutations(ts, rate=mr, discrete_genome=True, keep=True)
+
+modernInds=ind_met[ind_met.time==1.0] ## sample inds from final generation
+
+mod_ts=mut_ts.simplify(samples=list(itertools.chain(*modernInds.nodes)))
 
 
 
