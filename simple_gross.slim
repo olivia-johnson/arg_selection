@@ -31,7 +31,10 @@ initialize() {
 	if (!exists("admix")){
 		defineConstant("admix", 0);}
 	
-	defineGlobal("label", paste0("s",s,"_sT",selTime,"_sE", selEnd,"_sP",selPop, "_cF", cF, "_admix",admix));
+	if (!exists("rep")){
+		defineConstant("rep", 0);}
+	
+	defineGlobal("label", paste0(rep,"_s",s,"_sT",selTime,"_sE", selEnd,"_sP",selPop, "_cF", cF, "_admix",admix));
 	
 	
 	// m1 mutation type: selected mutation
