@@ -12,7 +12,7 @@ Ne=10000 # unscaled Ne
 rr=1e-8 # unscaled recombination rate
 mr=1e-8 # unscaled mutation rate
 s=0.1 # selection coefficient (0.0 for neutral)
-sampleSize=2 # number of indidivuals remebered in tree per generation
+sampleSize=8 # number of indidivuals remebered in tree per generation
 selPop=2 # subset value for subpopulation in SLiM 2 for p2, 4 for p22
 selTime=500 # time of selection (generations)
 cF = 0.1 # condntional frequency of selected allele (only active when s>0.0)
@@ -26,7 +26,7 @@ burnin = msprime.sim_ancestry(samples=sN, population_size=sN, recombination_rate
 burnin_ts = pyslim.annotate(burnin, model_type="WF", tick=1,    stage="late")
 burnin_ts.dump("/Users/olj5016/Documents/arg_selection/gross_burnin.trees")
 
-params="p{0}_t{1}_s{2}_f{3}_sS{4}".format(selPop, selTime, sS, cF, sampleSize)
+
 
 cmd = "slim -d s=" + str(sS) + " -d sampleSize=" + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) + " -d cF=" + str(cF)+ " ~/arg_selection/gross_demography.slim"
 print(cmd)
