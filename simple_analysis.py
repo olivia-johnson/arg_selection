@@ -7,6 +7,7 @@ import tskit
 import numpy as np
 import pandas as pd
 import itertools
+import matplotlib.pyplot as plt
 
 path="/Users/olj5016/Documents/arg_selection/"
 
@@ -21,13 +22,13 @@ scaling=10 # scale parameters by 10
 Ne=10000 # unscaled Ne
 rr=1e-8 # unscaled recombination rate
 mr=1e-8 # unscaled mutation rate
-s=0.06 # selection coefficient (0.0 for neutral)
+s=0.1 # selection coefficient (0.0 for neutral)
 sampleSize=8 # number of indidivuals remebered in tree per generation
 selPop=2 # subset value for subpopulation in SLiM 2 for p2, 4 for p22
 selTime=17500 # time of selection (generations)
 selEnd=20000 # time of selection (generations)
 cF = 0.1 # condntional frequency of selected allele (only active when s>0.0)
-admixture=0.3 ## admixture proportion set to 0 to turn admixture off
+admixture=0 ## admixture proportion set to 0 to turn admixture off
 rep=0
 
 # sN=Ne/scaling # scaled N
@@ -72,7 +73,7 @@ ind_times = np.unique(ts.individual_times).astype(int)
 
 mut_ts = msprime.sim_mutations(ts, rate=mr, discrete_genome=True, keep=True)
 
-modernInds=ind_met[ind_met.time=="1.0"] ## sample inds from final generation
+modernInds=ind_met[ind_met.time==1.0] ## sample inds from final generation
 
 mod_ts=mut_ts.simplify(samples=list(itertools.chain(*modernInds.nodes)))
 
@@ -100,7 +101,7 @@ demo=simple_demography(t1,tadmix,tsplit, tend, Ne, Ne, Ne, admixture)
 demography = miscellaneous.demo_to_demography(demo)
 print(demography)
 
-trees=[mod_ts.at(pos).copy() for pos in range(1000000, 10000000, 1000000)]
+trees=[mod_ts.at(pos).copy() for pos in range(0, 10000000, 10000)]
 
 glike.glike_trees(trees, demo)
 
@@ -113,3 +114,30 @@ bounds = [(0,tadmix), (t1,tsplit),(tadmix,tend),(tsplit,30000),(0,2*Ne), (0,2*Ne
 
 x, logp = estimate.maximize(fun, x0, bounds = bounds)
 
+logl=[]
+
+for l in range(len(trees)):
+    dictll={}
+               
+    dictll.update({"tree":l} )
+    dictll.update({"loglikelihood":glike.glike(trees[l], demo)})
+    logl.append(dictll)
+treell = pd.DataFrame(logl)
+
+plt.plot(treell['tree'], treell['loglikelihood'])
+plt.show()
+
+def find_outliers_IQR(df):
+
+   q1=df.quantile(0.25)
+
+   q3=df.quantile(0.75)
+
+   IQR=q3-q1
+
+   outliers = df[( (df>(q3+1.5*IQR)))]
+
+   return outliers
+
+outliers=find_outliers_IQR(treell['loglikelihood'])
+    
