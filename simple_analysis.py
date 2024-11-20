@@ -9,11 +9,14 @@ import pandas as pd
 import itertools
 import matplotlib.pyplot as plt
 
-path="/Users/olj5016/Documents/arg_selection/"
+#path="/Users/olj5016/Documents/arg_selection/"
+path="/Users/olivia/Documents/arg_selection/"
+
 
 os.chdir(path)
 
-sys.path.insert(1, "/Users/olj5016/arg_selection/")
+#sys.path.insert(1, "/Users/olj5016/arg_selection/")
+sys.path.insert(1, "/Users/olivia/arg_selection/")
 import glike
 import estimate
 import miscellaneous
@@ -39,7 +42,7 @@ rep=0
 params="{6}_s{0}_sT{1}_sE{2}_sP{3}_cF{4}_admix{5}".format(s,selTime, selEnd,selPop, cF, admixture,rep)
 
 burnin = msprime.sim_ancestry(samples=Ne, population_size=Ne, recombination_rate=rr, sequence_length=1e7)
-burnin_ts = pyslim.annotate(burnin, model_type="WF", tick=1,    stage="late")
+burnin_ts = pyslim.annotate(burnin, model_type="WF", tick=1, stage="late")
 burnin_ts.dump("{0}burnin_simple_{1}.trees".format(path,params))
 
 cmd = "slim -d s=" + str(s) + " -d rep="+str(rep)+" -d admix="+ str(admixture)+" -d sampleSize=" + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) + " -d cF=" + str(cF)+ " ~/arg_selection/simple_gross.slim"
@@ -112,7 +115,7 @@ def fun(t1,tadmix,tsplit, tend, NeA, NeB, NeC, admixture):
 x0 = {"t1":t1,"tadmix":tadmix,"tsplit":tsplit, "tend":tend, "NeA":Ne, "NeB":Ne, "NeC":Ne, "admixture":admixture}
 bounds = [(0,tadmix), (t1,tsplit),(tadmix,tend),(tsplit,30000),(0,2*Ne), (0,2*Ne), (0,2*Ne), (0,1)]
 
-x, logp = estimate.maximize(fun, x0, bounds = bounds)
+#x, logp = estimate.maximize(fun, x0, bounds = bounds)
 
 logl=[]
 
@@ -140,4 +143,5 @@ def find_outliers_IQR(df):
    return outliers
 
 outliers=find_outliers_IQR(treell['loglikelihood'])
-    
+
+outTree=trees[outliers.index[0]]
