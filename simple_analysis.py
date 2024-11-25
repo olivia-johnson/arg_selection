@@ -26,12 +26,12 @@ import miscellaneous
 Ne=10000 # unscaled Ne
 rr=1e-8 # unscaled recombination rate
 mr=1e-8 # unscaled mutation rate
-s=0.0 # selection coefficient (0.0 for neutral)
+s=1.0 # selection coefficient (0.0 for neutral)
 sampleSize=8 # number of indidivuals remebered in tree per generation
 selPop=2 # subset value for subpopulation in SLiM 2 for p2, 4 for p22
 selTime=17500 # time of selection (generations)
 selEnd=20000 # time of selection (generations)
-cF = 0.1 # condntional frequency of selected allele (only active when s>0.0)
+cF = 0.5 # conditional frequency of selected allele (only active when s>0.0)
 admixture=0.0 ## admixture proportion set to 0 to turn admixture off
 rep=0
 
@@ -75,9 +75,10 @@ ind_times = np.unique(ts.individual_times).astype(int)
 
 mut_ts = msprime.sim_mutations(ts, rate=mr, discrete_genome=True, keep=True)
 
-modernInds=ind_met[ind_met.time==1.0] ## sample inds from final generation
+modernInds=ts.samples(time=1) ## sample inds from final generation
+mp2=ts.samples(2,time=1)
 
-mod_ts=mut_ts.simplify(samples=list(itertools.chain(*modernInds.nodes)))
+mod_ts=mut_ts.simplify(samples=mp2)
 
 
 t1=1000
@@ -103,7 +104,7 @@ demo=simple_demography(t1,tadmix,tsplit, tend, Ne, Ne, Ne, admixture)
 demography = miscellaneous.demo_to_demography(demo)
 print(demography)
 
-trees=[mod_ts.at(pos).copy() for pos in range(0, 10000000, 1000)]
+trees=[mod_ts.at(pos).copy() for pos in range(0, 10000000, 10000)]
 #trees=[mod_ts.at_index(pos).copy() for pos in range(0, 100000)]#mod_ts.num_trees)]
 
 glike.glike_trees(trees, demo)
@@ -184,7 +185,7 @@ def find_adjacent_below_threshold(data, threshold, min_length=2):
 
     return sequences
 
-outliers=find_adjacent_below_threshold(treell['loglikelihood'], meanll, 50)
+outliers=find_adjacent_below_threshold(treell['loglikelihood'], meanll, 20)
 
 outtrees=treell[outliers[0][0]:outliers[0][1]]
 maxtreeid=outtrees[outtrees['loglikelihood']==max(outtrees['loglikelihood'])]
@@ -199,28 +200,7 @@ for i in x0:
     
     
     
-n=10
-numbers=mcoals
-nnumbers = np.array(numbers)
-clusters = pd.DataFrame({
-    'numbers': numbers,
-    'segment': np.cumsum([0] + list(1*(nnumbers[1:] - nnumbers[0:-1] > n))) + 1
-    }).groupby('segment').agg({'numbers': set}).to_dict()['numbers']
+
     
-def isolate_keys_with_multiple_values(my_dict):
-    """Isolates keys with more than one value in a dictionary.
-
-    Args:
-        my_dict (dict): The dictionary to process.
-
-    Returns:
-        list: A list of keys with more than one value.
-    """
-
-    result_keys = []
-    for key, value in my_dict.items():
-        if isinstance(value, list) and len(value) > 1:
-            result_keys.append(key)
-    return result_keys
 
 
