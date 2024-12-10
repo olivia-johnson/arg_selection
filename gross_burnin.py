@@ -15,7 +15,7 @@ s=0.1 # selection coefficient (0.0 for neutral)
 sampleSize=8 # number of indidivuals remebered in tree per generation
 selPop=2 # subset value for subpopulation in SLiM 2 for p2, 4 for p22
 selTime=500 # time of selection (generations)
-cF = 0.1 # condntional frequency of selected allele (only active when s>0.0)
+cF = 1 # condntional frequency of selected allele (only active when s>0.0)
 
 sN=Ne/scaling # scaled N
 sR=rr*scaling # scaled rr

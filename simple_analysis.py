@@ -195,7 +195,7 @@ mcoals=miscellaneous.get_coals(maxtree)
 
 for i in x0:
     print(i)
-    globals()[i] = 74
+    print(globals()[i])
     glike.glike(maxtree, demo)
     
     
