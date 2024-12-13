@@ -196,8 +196,10 @@ mcoals=miscellaneous.get_coals(maxtree)
 for i in x0:
     print(i)
     print(globals()[i])
-    glike.glike(maxtree, demo)
-    
+    start=glike.glike(maxtree, demo)
+    bundle=glike.Bundle(demo.phases[0])
+    origin.evaluate_logv()
+    if origin.logv<start:
     
     
 
