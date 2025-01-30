@@ -24,14 +24,14 @@ import miscellaneous
 
 
 Ne=10000 # unscaled Ne
-rr=1e-8 # unscaled recombination rate
+rr=1e-7 # unscaled recombination rate
 mr=1e-8 # unscaled mutation rate
-s=1.0 # selection coefficient (0.0 for neutral)
+s=00 # selection coefficient (0.0 for neutral)
 sampleSize=8 # number of indidivuals remebered in tree per generation
 selPop=2 # subset value for subpopulation in SLiM 2 for p2, 4 for p22
 selTime=17500 # time of selection (generations)
 selEnd=20000 # time of selection (generations)
-cF = 0.5 # conditional frequency of selected allele (only active when s>0.0)
+cF = 0.0 # conditional frequency of selected allele (only active when s>0.0)
 admixture=0.0 ## admixture proportion set to 0 to turn admixture off
 rep=0
 
@@ -104,7 +104,7 @@ demo=simple_demography(t1,tadmix,tsplit, tend, Ne, Ne, Ne, admixture)
 demography = miscellaneous.demo_to_demography(demo)
 print(demography)
 
-trees=[mod_ts.at(pos).copy() for pos in range(0, 10000000, 10000)]
+trees=[mod_ts.at(pos).copy() for pos in range(0, 10000000, 100000)]
 #trees=[mod_ts.at_index(pos).copy() for pos in range(0, 100000)]#mod_ts.num_trees)]
 
 glike.glike_trees(trees, demo)
@@ -116,7 +116,7 @@ def fun(t1,tadmix,tsplit, tend, NeA, NeB, NeC, admixture):
 x0 = {"t1":t1,"tadmix":tadmix,"tsplit":tsplit, "tend":tend, "NeA":Ne, "NeB":Ne, "NeC":Ne, "admixture":admixture}
 bounds = [(0,tadmix), (t1,tsplit),(tadmix,tend),(tsplit,30000),(0,2*Ne), (0,2*Ne), (0,2*Ne), (0,1)]
 
-#x, logp = estimate.maximize(fun, x0, bounds = bounds)
+x, logp = estimate.maximize(fun, x0, bounds = bounds)
 
 logl=[]
 
