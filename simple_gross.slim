@@ -8,33 +8,36 @@ initialize() {
 		defineConstant("path", "~/Documents/arg_selection/");}
 	
 	if (!exists("s")){
-		defineConstant("s", 0.06);}
+		defineConstant("s", 1.0);}
 	
 	if (!exists("sampleSize")){
-		defineConstant("sampleSize", 8);}
+		defineConstant("sampleSize", 100);}
 	
 	if (!exists("popSize")){
 		defineConstant("popSize", 10000);}
 	
 	if (!exists("selPop")){
-		defineGlobal("selPop", 2);}
+		defineGlobal("selPop", 1);}
 	
 	if (!exists("selTime")){
-		defineConstant("selTime", 17500);}
+		defineConstant("selTime", 17000);}
 	
 	if (!exists("selEnd")){
 		defineConstant("selEnd", 20000);}
 	
 	if (!exists("cF")){
-		defineConstant("cF", 0.1);}
+		defineConstant("cF", 1.0);}
+		
+	if (!exists("cFTime")){
+		defineConstant("cFTime", 17500);}
 	
 	if (!exists("admix")){
-		defineConstant("admix", 0);}
+		defineConstant("admix", 0.0);}
 	
 	if (!exists("rep")){
 		defineConstant("rep", 0);}
 	
-	defineGlobal("label", paste0(rep,"_s",s,"_sT",selTime,"_sE", selEnd,"_sP",selPop, "_cF", cF, "_admix",admix));
+	defineGlobal("label", paste0(rep,"_s",s,"_sT",selTime,"_sE", selEnd,"_sP",selPop, "_cF", cF, "_cFT",cFTime,"_admix",admix,"_sSize", sampleSize));
 	
 	
 	// m1 mutation type: selected mutation
@@ -76,7 +79,7 @@ late(){
 		sim.treeSeqOutput(paste0(path,"tmp",label,".trees"));}
 	if (modSel==0){
 		selInd=sample(sim.subpopulations[selPop].individuals, 1);
-		selInd.genomes.addNewDrawnMutation(m1, 5e6, originSubpop=selPop);
+		selInd.genome1.addNewDrawnMutation(m1, 5e6, originSubpop=selPop);
 	}
 	
 	if (sim.cycle==selEnd){
@@ -94,6 +97,11 @@ late(){
 			if(size(sim.mutations)==0){
 				sim.readFromPopulationFile(paste0(path,"tmp",label,".trees"));
 			}
+			if (sim.cycle==cFTime){
+				if (sim.mutationFrequencies(sim.subpopulations[selPop]) < cF){
+					
+					sim.readFromPopulationFile(paste0(path,"tmp",label,".trees"));
+				}}
 		}
 	}
 }
@@ -101,15 +109,6 @@ late(){
 
 
 20001 late(){
-	
-	if (s>0.0){
-		if (sim.mutationFrequencies(sim.subpopulations[selPop]) >= cF){
-			
-			sim.treeSeqOutput(paste0(path, "simplegross_", label,".trees"));
-		} else{
-			sim.readFromPopulationFile(paste0(path,"tmp",label,".trees"));
-		}}
-	else{
-		sim.treeSeqOutput(paste0(path,"simplegross_",label,".trees"));
-	}
+	sim.treeSeqOutput(paste0(path,"simplegross_",label,".trees"));
+
 }
