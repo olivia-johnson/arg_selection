@@ -166,41 +166,41 @@ for i in range(0,10):
     glike.glike_trees(trees, demo) 
     
     
-    # # plot trees
-    # index_list = [20, 5000000]
-    # plottrees = []  # Initialize an empty list
-    # #' Saving the Tree Figures to a file
-    # dir_path = f"/Users/olj5016/Documents/arg_selection/gliketrees"
-    # os.makedirs(dir_path, exist_ok=True)
-    # # Initialize an empty matrix to store tree interval information
-    # interval_matrix = []
+    # plot trees
+    index_list = [20, 5000000]
+    plottrees = []  # Initialize an empty list
+    #' Saving the Tree Figures to a file
+    dir_path = f"/Users/olj5016/Documents/arg_selection/gliketrees"
+    os.makedirs(dir_path, exist_ok=True)
+    # Initialize an empty matrix to store tree interval information
+    interval_matrix = []
     
-    # styles = []
-    # # Create a style for each population, programmatically (or just type the string by hand)
-    # for colour, p in zip(['red', 'green', 'blue'], mod_ts.populations()):
-    #     # target the symbols only (class "sym")
-    #     st = f".node.p{p.id} > .sym " + "{" + f"fill: {colour}" + "}"
-    #     styles.append(st)
-    #     print(f'"{st}" applies to nodes from population {p.metadata["name"]} (id {p.id})')
-    # css_string = " ".join(styles)
-    # print(f'CSS string applied:\n    "{css_string}"')
-    # # Start the loop over the tree index list to get the trees and create figures of them.
-    # for index in index_list:
-    #        tree_at_index = mod_ts.at(index)
-    #        # *** --------------- Generate PDF for each tree
-    #        t = tree_at_index.draw_svg(size=(2000, 500), node_labels={},    # Remove all node labels for a clearer viz
-    #        style=css_string, y_axis=True)
-    #        filename = f"glike_{params}_all_{index}.svg"
-    #        ## Save the SVG to a file
-    #        # Save the SVG to a temporary file
-    #        svg_filename = os.path.join(dir_path, "temp.svg")
-    #        with open(svg_filename, 'w') as f:
-    #            f.write(t)
-    #        # Convert SVG to PDF
-    #        pdf_filename = os.path.join(dir_path, filename + ".pdf")
-    #        cairosvg.svg2pdf(url=svg_filename, write_to=pdf_filename)
-    #        # Remove the temporary SVG file
-    #        os.remove(svg_filename)
+    styles = []
+    # Create a style for each population, programmatically (or just type the string by hand)
+    for colour, p in zip(['red', 'green', 'blue'], mod_ts.populations()):
+        # target the symbols only (class "sym")
+        st = f".node.p{p.id} > .sym " + "{" + f"fill: {colour}" + "}"
+        styles.append(st)
+        print(f'"{st}" applies to nodes from population {p.metadata["name"]} (id {p.id})')
+    css_string = " ".join(styles)
+    print(f'CSS string applied:\n    "{css_string}"')
+    # Start the loop over the tree index list to get the trees and create figures of them.
+    for index in index_list:
+           tree_at_index = mod_ts.at(index)
+           # *** --------------- Generate PDF for each tree
+           t = tree_at_index.draw_svg(size=(2000, 500), node_labels={},    # Remove all node labels for a clearer viz
+           style=css_string, y_axis=True)
+           filename = f"glike_{params}_all_{index}.svg"
+           ## Save the SVG to a file
+           # Save the SVG to a temporary file
+           svg_filename = os.path.join(dir_path, "temp.svg")
+           with open(svg_filename, 'w') as f:
+               f.write(t)
+           # Convert SVG to PDF
+           pdf_filename = os.path.join(dir_path, filename + ".pdf")
+           cairosvg.svg2pdf(url=svg_filename, write_to=pdf_filename)
+           # Remove the temporary SVG file
+           os.remove(svg_filename)
     
     ### GLIKE ESTIMATION
     
@@ -228,6 +228,8 @@ for i in range(0,10):
 
     # list of bound for maximise function (only works if set for the selPop)
     # glike_bounds = [(t1,t1), (tadmix,tadmix),(tsplit,tsplit),(tend,tend),(NeA,NeA), (NeB,NeB), (0,10*Ne), (admixture,admixture)]
+    
+
     glike_bounds = [(tsplit,tsplit),(tend,tend),(NeA,NeA), (NeB,NeB), (0,10*Ne)]
     neutral_bounds = [(0,tend),(tsplit,np.inf),(0,10*NeA), (0,10*NeB), (0,10*NeC)]
     
@@ -287,7 +289,7 @@ for i in range(0, int(mod_ts.sequence_length),winsize):
     trees=[mut_ts.at(pos).copy() for pos in range(i, (i+winsize), int(winsize/20))]
     fixed_est= glike.glike_trees(trees, demo, samples, kappa=10000)
     win_fixed.append(fixed_est)
-    sel_est=estimate.maximize(glike_fun, glike_x0, bounds=glike_bounds, precision =0.005, epochs=50)
+    sel_est=estimate.maximize(glike_fun, glike_x0, bounds=ancient_bounds, precision =0.005, epochs=50)
     win.append(sel_est[0])
     win_est.append(sel_est[1])
 
@@ -331,7 +333,7 @@ for i in range(0, int(mod_ts.sequence_length),winsize):
     trees=[mut_ts.at(int(i+(winsize/2))).copy()]
     fixed_est= glike.glike_trees(trees, demo, samples,kappa=10000)
     win_fixed.append(fixed_est)
-    sel_est=estimate.maximize(glike_fun, glike_x0, bounds=glike_bounds, precision=0.005, epochs=50)
+    sel_est=estimate.maximize(glike_fun, glike_x0, bounds=ancient_bounds, precision=0.005, epochs=50)
     win.append(sel_est[0])
     win_est.append(sel_est[1])
 
@@ -362,6 +364,39 @@ windows.to_csv( "windowedlr_single_{0}.txt".format(params), sep="\t", index=Fals
 # plt.savefig('fixlikeli_singletree_k10000_{0}.pdf'.format(params))
 # plt.show
 
+
+
+
+## Ancient Sweep
+
+def simple_demography(tsplit, tend, NeA, NeB, NeC, NeBC):
+        demo=glike.Demo()
+        phase1=glike.Phase(0,tsplit, [1/NeA,1/NeB,1/NeC], P=np.array([[1,0,0],[0,1,0],[0,0,1]]))
+        phase2=glike.Phase(tsplit,tend, [1/NeA,1/NeBC],  P=np.array([[1,0], [0,1],[0,1]]))
+        phase3=glike.Phase(tend,np.inf, [1/NeA],  P=np.array([[1],[1]]))
+        demo.add_phase(phase1)
+        demo.add_phase(phase2)
+        demo.add_phase(phase3)
+        
+        return demo
+    
+    
+    tsplit=2500
+    tend=20000
+    NeA=20000
+    NeB=20000
+    NeC=20000
+    demo=simple_demography(2500, 20000, 20000, 20000, 20000)
+    
+    
+    #check demography
+    demography = miscellaneous.demo_to_demography(demo)
+    print(demography)
+    # sample trees from demography
+    trees=[mut_ts.at(pos).copy() for pos in range(0, 10000000, 100000)]
+    
+    #generate overall likelihood value (will bea meanll*10)
+    glike.glike_trees(trees, demo) 
 
 # ### GLIKE ESTIMATES FOR OUTLIER TREES ###
 
