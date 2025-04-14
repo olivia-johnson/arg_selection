@@ -44,7 +44,7 @@ selPop=1 # subset value for subpopulation in SLiM 2 for p2, 4 for p22
 selTime=17000 # time of selection (generations)
 selEnd=20000 # time of selection (generations)
 cF = 1.0 # conditional frequency of selected allele (only active when s>0.0)
-cFTime = 17499
+cFTime = 17499 ## time to check the conditional frequency
 admixture=0.000000 ## admixture proportion set to 0 to turn admixture off
 rep=0 # replicate number
 

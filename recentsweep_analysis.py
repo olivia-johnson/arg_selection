@@ -32,11 +32,11 @@ rr=1e-7 # unscaled recombination rate
 mr=1e-8 # unscaled mutation rate
 s=1.0 # selection coefficient (0.0 for neutral)
 sampleSize=100 # number of indidivuals remebered in tree per generation
-selPop=1 # subset value for subpopulation in SLiM 2 for p2, 4 for p22
-selTime=17000 # time of selection (generations)
+selPop=2 # subset value for subpopulation in SLiM 2 for p2, 4 for p22
+selTime=19500 # time of selection (generations)
 selEnd=20000 # time of selection (generations)
 cF = 1.0 # conditional frequency of selected allele (only active when s>0.0)
-cFTime = 17500 # Time to check conditional frequency
+cFTime = 20000 ## time to check conditional frequency
 admixture=0.000000 ## admixture proportion set to 0 to turn admixture off
 rep=0 # replicate number
 
@@ -88,10 +88,11 @@ modernInds=ts.samples(time=1) ## sample inds from final generation
 mod_ts=ts.simplify(samples=modernInds) # subset tree to just indidivuals from selPop
 
 
-### ANCIENT SWEEP
+### SWEEP AFTER P2 (C) SPLIT
 
 #overlay mutations on trees
 mut_ts = msprime.sim_mutations(mod_ts, rate=mr, discrete_genome=True, keep=True)
+
 
 def simple_demography(tsplit, tend, NeA, NeB, NeC, NeBC):
         demo=glike.Demo()
@@ -128,7 +129,7 @@ def glike_fun(tsplit, tend, NeA, NeB, NeC, NeBC):
 glike_x0 = {"tsplit":tsplit, "tend":tend, "NeA":NeA, "NeB":NeB,"NeC":NeC, "NeBC":NeBC}
  
 ancient_bounds = [(tsplit,tsplit),(tend,tend),(NeA,NeA), (NeB,NeB), (NeC,NeC),(0,10*Ne)]
-modern_bounds = [(tsplit,tsplit),(tend,tend),(NeA,NeA), (NeB,NeB), (0,10*Ne),(NeB, NeBC)]
+modern_bounds = [(tsplit,tsplit),(tend,tend),(NeA,NeA), (NeB,NeB), (0,10*Ne),(NeBC,NeBC)]
 
  
 win=[]
@@ -141,7 +142,7 @@ for i in range(0, int(mod_ts.sequence_length),winsize):
     trees=[mut_ts.at(int(i+(winsize/2))).copy()]
     fixed_est= glike.glike_trees(trees, demo, samples,kappa=10000)
     win_fixed.append(fixed_est)
-    sel_est=estimate.maximize(glike_fun, glike_x0, bounds=ancient_bounds, precision=0.005, epochs=50)
+    sel_est=estimate.maximize(glike_fun, glike_x0, bounds=modern_bounds, precision=0.005, epochs=50)
     win.append(sel_est[0])
     win_est.append(sel_est[1])
 
