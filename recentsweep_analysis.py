@@ -150,7 +150,7 @@ for i in range(0, int(mod_ts.sequence_length),winsize): #loop through the simula
     trees=[mut_ts.at(int(i+(winsize/2))).copy()] # extract tree from midpoint of window
     fixed_est= glike.glike_trees(trees, demo, samples,kappa=10000) # calculate likelihood of tree based on fixed true values
     win_fixed.append(fixed_est) # add fixed likelihood estimate to vec
-    sel_est=estimate.maximize(glike_fun, glike_x0, bounds=ancient_bounds, precision=0.005, epochs=50) #optimise parameters for tree data
+    sel_est=estimate.maximize(glike_fun, glike_x0, bounds=modern_bounds, precision=0.005, epochs=50) #optimise parameters for tree data
     win.append(sel_est[0]) # add optimised param values to vec
     win_est.append(sel_est[1]) # add optimised likelihood to vector
 
