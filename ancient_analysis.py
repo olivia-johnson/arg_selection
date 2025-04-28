@@ -12,12 +12,13 @@ import statistics
 from IPython.display import SVG
 import cairosvg
 
+## path to trees
 path="/Users/olj5016/Documents/arg_selection/"
 #path="/Users/olivia/Documents/arg_selection/"
 
 
 os.chdir(path)
-
+#path to glike respository
 sys.path.insert(1, "/Users/olj5016/glike/glike/")
 #sys.path.insert(1, "/Users/olivia/arg_selection/")
 import glike
@@ -40,9 +41,10 @@ cFTime = 17500 # Time to check conditional frequency
 admixture=0.000000 ## admixture proportion set to 0 to turn admixture off
 rep=0 # replicate number
 
+## create parameter label (replicate number_selection coefficient_initation of selection_end of selection_conditional frequency_time to meet conditional frequency_admixture proportion_sample size)
 params="{6}_s{0}_sT{1}_sE{2}_sP{3}_cF{4}_cFT{8}_admix{5}_sSize{7}".format(s,selTime, selEnd,selPop, cF, admixture,rep,sampleSize,cFTime)
 
-#check if simultion file already ec=xistis, if not simulate demography
+#check if simultion file already existis, if not simulate demography
 if os.path.isfile("{0}simplegross_{1}.trees".format(path,params))==False:
     # simulate msprime burn in
     burnin = msprime.sim_ancestry(samples=Ne, population_size=Ne, recombination_rate=rr, sequence_length=1e7)
@@ -51,7 +53,10 @@ if os.path.isfile("{0}simplegross_{1}.trees".format(path,params))==False:
     burnin_ts.dump("{0}burnin_simple_{1}.trees".format(path,params))
     
     #run slim simulation of simple demography with above paramaters
-    cmd = "slim -d s=" + str(s) + " -d rep="+str(rep)+" -d admix="+ str(admixture)+" -d sampleSize=" + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) +" -d selEnd=" + str(selEnd) + " -d cF=" + str(cF)+" -d cFTime=" + str(cFTime)+ " ~/arg_selection/simple_gross.slim"
+    cmd = "slim -d s=" + str(s) + " -d rep="+str(rep)+" -d admix="+ str(admixture)
+    +   " -d sampleSize=" + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) 
+    + " -d selEnd=" + str(selEnd) + " -d cF=" + str(cF)+" -d cFTime=" + str(cFTime)
+    + " ~/arg_selection/simple_gross.slim" #make sure path to slim file is correct
     print(cmd)
     os.system(cmd)
 
@@ -85,7 +90,7 @@ ind_times = np.unique(ts.individual_times).astype(int)
 
 
 modernInds=ts.samples(time=1) ## sample inds from final generation
-mod_ts=ts.simplify(samples=modernInds) # subset tree to just indidivuals from selPop
+mod_ts=ts.simplify(samples=modernInds) # subset tree to just individuals from selPop
 
 
 ### ANCIENT SWEEP
@@ -93,24 +98,27 @@ mod_ts=ts.simplify(samples=modernInds) # subset tree to just indidivuals from se
 #overlay mutations on trees
 mut_ts = msprime.sim_mutations(mod_ts, rate=mr, discrete_genome=True, keep=True)
 
+##gLike demography function
 def simple_demography(tsplit, tend, NeA, NeB, NeC, NeBC):
-        demo=glike.Demo()
-        phase1=glike.Phase(0,tsplit, [1/NeA,1/NeB,1/NeC], P=np.array([[1,0,0],[0,1,0],[0,0,1]]))
-        phase2=glike.Phase(tsplit,tend, [1/NeA,1/NeBC],  P=np.array([[1,0], [0,1],[0,1]]))
-        phase3=glike.Phase(tend,np.inf, [1/NeA],  P=np.array([[1],[1]]))
-        demo.add_phase(phase1)
-        demo.add_phase(phase2)
-        demo.add_phase(phase3)
+        demo=glike.Demo() # create demography object
+        phase1=glike.Phase(0,tsplit, [1/NeA,1/NeB,1/NeC], P=np.array([[1,0,0],[0,1,0],[0,0,1]])) #final state of population (most recent)
+        phase2=glike.Phase(tsplit,tend, [1/NeA,1/NeBC],  P=np.array([[1,0], [0,1],[0,1]])) # intermediate phase split between A and BC (ancestor of B and C)
+        phase3=glike.Phase(tend,np.inf, [1/NeA],  P=np.array([[1],[1]])) # initial phase (single lineage)
+        demo.add_phase(phase1) ##add phase to demography object
+        demo.add_phase(phase2)##add phase to demography object
+        demo.add_phase(phase3)##add phase to demography object
         
-        return demo
+        return demo # return demography object
     
+
+demo=simple_demography(2500, 20000, 20000, 20000, 20000, 20000)
+# set values
 tsplit=2500
 tend=20000
 NeA=20000
 NeB=20000
 NeC=20000
 NeBC=20000
-demo=simple_demography(2500, 20000, 20000, 20000, 20000, 20000)
     
     
 #check demography
@@ -118,47 +126,51 @@ demography = miscellaneous.demo_to_demography(demo)
 print(demography)
 demo.print()
 
-tmp = ["A"] * (2*sampleSize) + ["B"] * (2*sampleSize) + ["C"] * (2*sampleSize) ##A is YRI, B is EUR, C is HAN
+# create population labels for samples
+tmp = ["A"] * (2*sampleSize) + ["B"] * (2*sampleSize) + ["C"] * (2*sampleSize) 
 samples = {i:pop for i, pop in enumerate(tmp)}
 
+#create gLike function - pass variables and get likelihood of parameter fit
 def glike_fun(tsplit, tend, NeA, NeB, NeC, NeBC):
     demo = simple_demography(tsplit, tend, NeA, NeB, NeC, NeBC)
-    return glike.glike_trees(trees, demo, samples, kappa=10000)
+    return glike.glike_trees(trees, demo, samples, kappa=10000) #return likelihood
 
-glike_x0 = {"tsplit":tsplit, "tend":tend, "NeA":NeA, "NeB":NeB,"NeC":NeC, "NeBC":NeBC}
+glike_x0 = {"tsplit":tsplit, "tend":tend, "NeA":NeA, "NeB":NeB,"NeC":NeC, "NeBC":NeBC} # dict of initial values to start estimating from
  
-ancient_bounds = [(tsplit,tsplit),(tend,tend),(NeA,NeA), (NeB,NeB), (NeC,NeC),(0,10*Ne)]
-modern_bounds = [(tsplit,tsplit),(tend,tend),(NeA,NeA), (NeB,NeB), (0,10*Ne),(NeB, NeBC)]
+ancient_bounds = [(tsplit,tsplit),(tend,tend),(NeA,NeA), (NeB,NeB), (NeC,NeC),(0,10*Ne)] # set bounds for estimation values, all fixed expet Ne of interest
+
 
  
-win=[]
-win_est=[]
-win_fixed=[]
-pos=[]
-winsize=50000
-for i in range(0, int(mod_ts.sequence_length),winsize):
-    pos.append(int(i+(winsize/2)))
-    trees=[mut_ts.at(int(i+(winsize/2))).copy()]
-    fixed_est= glike.glike_trees(trees, demo, samples,kappa=10000)
-    win_fixed.append(fixed_est)
-    sel_est=estimate.maximize(glike_fun, glike_x0, bounds=ancient_bounds, precision=0.005, epochs=50)
-    win.append(sel_est[0])
-    win_est.append(sel_est[1])
+win=[] # vec of optimized parameter values
+win_est=[] # vec of optimized likelihoods
+win_fixed=[] # vec of likelihood under true model
+pos=[] # position of window
+winsize=50000 #window size
+for i in range(0, int(mod_ts.sequence_length),winsize): #loop through the simulated segment
+    pos.append(int(i+(winsize/2))) # add position of midpoint of the window to pos vec
+    trees=[mut_ts.at(int(i+(winsize/2))).copy()] # extract tree from midpoint of window
+    fixed_est= glike.glike_trees(trees, demo, samples,kappa=10000) # calculate likelihood of tree based on fixed true values
+    win_fixed.append(fixed_est) # add fixed likelihood estimate to vec
+    sel_est=estimate.maximize(glike_fun, glike_x0, bounds=ancient_bounds, precision=0.005, epochs=50) #optimise parameters for tree data
+    win.append(sel_est[0]) # add optimised param values to vec
+    win_est.append(sel_est[1]) # add optimised likelihood to vector
 
-diff=[]
-tdiff=[]
+diff=[] # vector of difference between optimised and fixed likelihoods
+tdiff=[] # 2 x difference for p-val calc (conducted in R)
 for i in range(0,len(win_est)):
-    ratio=win_est[i]-win_fixed[i]
-    diff.append(ratio)
-    tdiff.append((2*ratio))
+    ratio=win_est[i]-win_fixed[i] # calculate differece
+    diff.append(ratio) # append diff to vec
+    tdiff.append((2*ratio)) # append 2 x diff to vec
 
-
-windata = {'Pos': pos, 'l_ratio': tdiff, 'l_fixed': win_fixed, 'l_estimate':win_est}
+# create dt of windowed values
+windata = {'Pos': pos, 'l_ratio': tdiff, 'l_fixed': win_fixed, 'l_estimate':win_est} 
 windows = pd.DataFrame(windata)
 
-windows.to_csv( "windowedlr_single_{0}.txt".format(params), sep="\t", index=False)
+# export table
+windows.to_csv( "ancientwindowedlr_single_{0}.txt".format(params), sep="\t", index=False)
 
-rcmd="Rscript --vanilla /Users/olj5016/arg_selection/pval.R 'windowedlr_single_{0}.txt'".format(params)
+# Run Rscript that will plot tdiff and calculate and plot pvalues for windows
+rcmd="Rscript --vanilla /Users/olj5016/arg_selection/pval.R 'ancientwindowedlr_single_{0}.txt'".format(params)
 os.system(rcmd)
 
 
