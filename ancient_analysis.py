@@ -35,12 +35,12 @@ s=1.0 # selection coefficient (0.0 for neutral)
 sampleSize=100 # number of indidivuals remebered in tree per generation
 selPop=1 # subset value for subpopulation in SLiM 2 for p2, 4 for p22
 selTime=17000 # time of selection (generations)
-selEnd=20000 # time of selection (generations)
+selEnd=17500 # time of selection (generations)
 cF = 1.0 # conditional frequency of selected allele (only active when s>0.0)
 cFTime = 17500 # Time to check conditional frequency
 admixture=0.000000 ## admixture proportion set to 0 to turn admixture off
 rep=0 # replicate number
-for s in [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]:
+for s in [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]: ## test varying s
 ## create parameter label (replicate number_selection coefficient_initation of selection_end of selection_conditional frequency_time to meet conditional frequency_admixture proportion_sample size)
     params="{6}_s{0}_sT{1}_sE{2}_sP{3}_cF{4}_cFT{8}_admix{5}_sSize{7}".format(s,selTime, selEnd,selPop, cF, admixture,rep,sampleSize,cFTime)
     
