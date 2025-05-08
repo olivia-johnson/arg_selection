@@ -13,7 +13,7 @@ from IPython.display import SVG
 import cairosvg
 
 #path to output files
-path=sys.argv[6stro]
+path=sys.argv[6]
 #path="/Users/olivia/Documents/arg_selection/"
 
 
