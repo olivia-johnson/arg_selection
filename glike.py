@@ -9,7 +9,7 @@ import scipy.linalg
 
 import sys
 sys.path.insert(1, "/Users/olj5016/arg_selection/")
-sys.path.insert(1, "/storage/home/olj5016/work/glike/glike/")
+sys.path.insert(1, "/storage/home/olj5016/work/glike/src/")
 import npe # numpy C extension
 
 # test if a numpy array is identity matrix
