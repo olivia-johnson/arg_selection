@@ -1,6 +1,5 @@
 import sys
-sys.path.append('/storage/work/olj5016/.conda/envs/sim_env/bin/')
-import msp
+import msprime
 import pyslim
 import os
 
