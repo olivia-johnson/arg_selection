@@ -1,7 +1,9 @@
-import msprime
+import sys
+sys.path.append('/storage/work/olj5016/.conda/envs/sim_env/bin/')
+import msp
 import pyslim
 import os
-import sys
+
 import tskit
 #import allel
 import numpy as np
