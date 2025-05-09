@@ -7,11 +7,7 @@ import tskit
 #import allel
 import numpy as np
 import pandas as pd
-import itertools
-import matplotlib.pyplot as plt
-import statistics
-from IPython.display import SVG
-import cairosvg
+
 
 #path to output files
 path=sys.argv[6]
