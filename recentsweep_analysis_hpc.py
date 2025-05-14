@@ -17,7 +17,7 @@ import estimate
 import miscellaneous
 
 #path to output files
-path=sys.argv[7]
+path=sys.argv[6]
 #path="/Users/olivia/Documents/arg_selection/"
 
 os.chdir(path)
@@ -30,14 +30,13 @@ sampleSize=100 # number of indidivuals remebered in tree per generation
 selPop=2 # subset value for subpopulation in SLiM 2 for p2, 4 for p22
 selTime=sys.argv[2] # time of selection (generations)
 selEnd=sys.argv[3] # time of selection (generations)
-cF = sys.argv[4] # conditional frequency of selected allele (only active when s>0.0)
-admixTime = sys.argv[6] ## time to check conditional frequency
-admixture=sys.argv[5] ## admixture proportion set to 0 to turn admixture off
+admixTime = sys.argv[5] ## time to check conditional frequency
+admixture=sys.argv[4] ## admixture proportion set to 0 to turn admixture off
 rep=sys.argv[1] # replicate number
 
 ## create parameter label (replicate number_selection coefficient_initation of selection_end of selection_conditional frequency_time to meet conditional frequency_admixture proportion_sample size)
-for s in [0.2]: ## test varying s
-    params="{6}_s{0}_sT{1}_sE{2}_sP{3}_cF{4}_admixTime{8}_admix{5}_sSize{7}".format(s,selTime, selEnd,selPop, cF, admixture,rep,sampleSize,admixTime)
+for s in [0.02,0.05,0.1,0.2]: ## test varying s
+    params="{5}_s{0}_sT{1}_sE{2}_sP{3}_admixTime{7}_admix{4}_sSize{6}".format(s,selTime, selEnd,selPop, admixture,rep,sampleSize,admixTime)
     
     #check if simultion file already existis, if not simulate demography
     if os.path.isfile("{0}simplegross_{1}.trees".format(path,params))==False:
@@ -50,7 +49,7 @@ for s in [0.2]: ## test varying s
         #run slim simulation of simple demography with above paramaters
         #make sure path to slim file is correct (at the end of cmd)
         results = "path='" + str(path)+ "'"
-        cmd = "slim -d s=" + str(s) + " -d rep="+str(rep)+" -d admix="+ str(admixture)+" -d sampleSize="  + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) +" -d selEnd=" + str(selEnd)  + " -d cF=" + str(cF)+" -d admixTime=" + str(admixTime) + ' -d "' + str(results) + '" /storage/home/olj5016/work/arg_selection/simple_gross.slim' 
+        cmd = "slim -d s=" + str(s) + " -d rep="+str(rep)+" -d admix="+ str(admixture)+" -d sampleSize="  + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) +" -d selEnd=" + str(selEnd) +" -d admixTime=" + str(admixTime) + ' -d "' + str(results) + '" /storage/home/olj5016/work/arg_selection/simple_gross.slim' 
         print(cmd)
         os.system(cmd)
     
