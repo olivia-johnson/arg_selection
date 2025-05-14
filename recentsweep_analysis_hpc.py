@@ -1,27 +1,26 @@
+import numcodecs
 import numba
 import lmdb
 import sys
 import msprime
 import pyslim
 import os
-
 import tskit
-#import allel
 import numpy as np
 import pandas as pd
 
-
-#path to output files
-path=sys.argv[6]
-#path="/Users/olivia/Documents/arg_selection/"
-
-os.chdir(path)
 # path to github repository
 sys.path.insert(1, "/storage/home/olj5016/work/glike/glike/")
 #sys.path.insert(1, "/Users/olivia/arg_selection/")
 import glike
 import estimate
 import miscellaneous
+
+#path to output files
+path=sys.argv[7]
+#path="/Users/olivia/Documents/arg_selection/"
+
+os.chdir(path)
 
 Ne=10000 # unscaled Ne
 rr=1e-7 # unscaled recombination rate
@@ -32,13 +31,13 @@ selPop=2 # subset value for subpopulation in SLiM 2 for p2, 4 for p22
 selTime=sys.argv[2] # time of selection (generations)
 selEnd=sys.argv[3] # time of selection (generations)
 cF = sys.argv[4] # conditional frequency of selected allele (only active when s>0.0)
-cFTime = sys.argv[3] ## time to check conditional frequency
+admixTime = sys.argv[6] ## time to check conditional frequency
 admixture=sys.argv[5] ## admixture proportion set to 0 to turn admixture off
 rep=sys.argv[1] # replicate number
 
 ## create parameter label (replicate number_selection coefficient_initation of selection_end of selection_conditional frequency_time to meet conditional frequency_admixture proportion_sample size)
-for s in [0.0,0.02,0.05,0.1,0.2]: ## test varying s
-    params="{6}_s{0}_sT{1}_sE{2}_sP{3}_cF{4}_cFT{8}_admix{5}_sSize{7}".format(s,selTime, selEnd,selPop, cF, admixture,rep,sampleSize,cFTime)
+for s in [0.2]: ## test varying s
+    params="{6}_s{0}_sT{1}_sE{2}_sP{3}_cF{4}_admixTime{8}_admix{5}_sSize{7}".format(s,selTime, selEnd,selPop, cF, admixture,rep,sampleSize,admixTime)
     
     #check if simultion file already existis, if not simulate demography
     if os.path.isfile("{0}simplegross_{1}.trees".format(path,params))==False:
@@ -51,7 +50,7 @@ for s in [0.0,0.02,0.05,0.1,0.2]: ## test varying s
         #run slim simulation of simple demography with above paramaters
         #make sure path to slim file is correct (at the end of cmd)
         results = "path='" + str(path)+ "'"
-        cmd = "slim -d s=" + str(s) + " -d rep="+str(rep)+" -d admix="+ str(admixture)+" -d sampleSize="  + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) +" -d selEnd=" + str(selEnd)  + " -d cF=" + str(cF)+" -d cFTime=" + str(cFTime) + " -d path=" + str(results) + " /storage/home/olj5016/work/arg_selection/simple_gross.slim" 
+        cmd = "slim -d s=" + str(s) + " -d rep="+str(rep)+" -d admix="+ str(admixture)+" -d sampleSize="  + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) +" -d selEnd=" + str(selEnd)  + " -d cF=" + str(cF)+" -d admixTime=" + str(admixTime) + ' -d "' + str(results) + '" /storage/home/olj5016/work/arg_selection/simple_gross.slim' 
         print(cmd)
         os.system(cmd)
     
@@ -94,25 +93,28 @@ for s in [0.0,0.02,0.05,0.1,0.2]: ## test varying s
     mut_ts = msprime.sim_mutations(mod_ts, rate=mr, discrete_genome=True, keep=True)
     
     
-    def simple_demography(tsplit, tend, NeA, NeB, NeC, NeBC):
-            demo=glike.Demo() # create demography object
-            phase1=glike.Phase(0,tsplit, [1/NeA,1/NeB,1/NeC], P=np.array([[1,0,0],[0,1,0],[0,0,1]])) #final state of population (most recent)
-            phase2=glike.Phase(tsplit,tend, [1/NeA,1/NeBC],  P=np.array([[1,0], [0,1],[0,1]])) # intermediate phase split between A and BC (ancestor of B and C)
-            phase3=glike.Phase(tend,np.inf, [1/NeA],  P=np.array([[1],[1]])) # initial phase (single lineage)
-            demo.add_phase(phase1)##add phase to demography object
-            demo.add_phase(phase2)##add phase to demography object
-            demo.add_phase(phase3)##add phase to demography object
-            
-            return demo # return demography object
+    def simple_demography(tsplit, tend, NeA, NeB, NeC, tSweep, NeSweep):
+        demo=glike.Demo()
+        phase1=glike.Phase(0, tSweep, [1/NeA,1/NeB,1/NeC], P=np.array([[1,0,0],[0,1,0],[0,0,1]]))
+        phase2=glike.Phase(tSweep,tsplit, [1/NeA,1/NeB,1/NeSweep], P=np.array([[1,0,0],[0,1,0],[0,0,1]]))
+        phase3=glike.Phase(tsplit,tend, [1/NeA,1/NeB],  P=np.array([[1,0], [0,1],[0,1]]))
+        phase4=glike.Phase(tend,np.inf, [1/NeA],  P=np.array([[1],[1]]))
+        demo.add_phase(phase1)
+        demo.add_phase(phase2)
+        demo.add_phase(phase3)
+        demo.add_phase(phase4)
         
-    demo=simple_demography(2500, 20000, 20000, 20000, 20000, 20000)
+        return demo
+        
+    demo=simple_demography(2500, 20000, 20000, 20000, 20000, 500, 20000)
     #set variables
     tsplit=2500
     tend=20000
     NeA=20000
     NeB=20000
     NeC=20000
-    NeBC=20000
+    tSweep=500
+    NeSweep=20000
         
         
     #check demography
@@ -125,13 +127,13 @@ for s in [0.0,0.02,0.05,0.1,0.2]: ## test varying s
     samples = {i:pop for i, pop in enumerate(tmp)}
     
     #create gLike function - pass variables and get likelihood of parameter fit
-    def glike_fun(tsplit, tend, NeA, NeB, NeC, NeBC):
-        demo = simple_demography(tsplit, tend, NeA, NeB, NeC, NeBC)
+    def glike_fun(tsplit, tend, NeA, NeB, NeC, tSweep, NeSweep):
+        demo = simple_demography(tsplit, tend, NeA, NeB, NeC, tSweep, NeSweep)
         return glike.glike_trees(trees, demo, samples, kappa=10000)  #return likelihood
     
-    glike_x0 = {"tsplit":tsplit, "tend":tend, "NeA":NeA, "NeB":NeB,"NeC":NeC, "NeBC":NeBC} # dict of initial values to start estimating from
+    glike_x0 = {"tsplit":tsplit, "tend":tend, "NeA":NeA, "NeB":NeB,"NeC":NeC, "tSweep":tSweep, "NeSweep":NeSweep} # dict of initial values to start estimating from
     
-    modern_bounds = [(tsplit,tsplit),(tend,tend),(NeA,NeA), (NeB,NeB), (0,10*Ne),(NeBC,NeBC)] # set bounds for estimation values, all fixed expet Ne of interest
+    modern_bounds = [(tsplit,tsplit),(tend,tend),(NeA,NeA), (NeB,NeB), (NeC, NeC), (0,tend),(0,10*Ne)] # set bounds for estimation values, all fixed expet Ne of interest
     
      
     win=[] # vec of optimized parameter values
