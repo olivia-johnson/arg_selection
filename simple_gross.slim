@@ -24,9 +24,7 @@ initialize() {
 	
 	if (!exists("selEnd")){ //end time of selection
 		defineConstant("selEnd", 20000);}
-	
-	if (!exists("cF")){ //conditional frequency
-		defineConstant("cF", 1.0);}
+
 	
 	if (!exists("admixTime")){ // time to check if conditional frequency has been reached
 		defineConstant("admixTime", 20000);}
@@ -37,7 +35,7 @@ initialize() {
 	if (!exists("rep")){ // replicate number
 		defineConstant("rep", 0);}
 	
-	defineGlobal("label", paste0(rep,"_s",s,"_sT",selTime,"_sE", selEnd,"_sP",selPop, "_cF", cF, "_admixTime",admixTime,"_admix",admix,"_sSize", sampleSize)); // create label 
+	defineGlobal("label", paste0(rep,"_s",s,"_sT",selTime,"_sE", selEnd,"_sP",selPop, "_admixTime",admixTime,"_admix",admix,"_sSize", sampleSize)); // create label 
 	
 	
 	// m1 mutation type: selected mutation
@@ -81,7 +79,7 @@ late(){
 		
 		modSel=gen%selTime; // check is selection should start
 		if(modSel==(selTime-1)){
-			sim.treeSeqOutput(paste0(path,"tmp",label,".trees"));} // save tree incase cF is not reached and need to restart
+			sim.treeSeqOutput(paste0(path,"tmp",label,".trees"));} // save tree incase sel locus is lost and need to restart
 		if (modSel==0){ // at time of selection
 			selInd=sample(sim.subpopulations[selPop].individuals, 1); //sample 1 individual from the select population
 			selInd.genome1.addNewDrawnMutation(m1, 5e6, originSubpop=selPop); // add single selected mutation to the selected individual
