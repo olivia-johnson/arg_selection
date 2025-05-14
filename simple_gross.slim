@@ -17,10 +17,10 @@ initialize() {
 		defineConstant("popSize", 10000);}
 	
 	if (!exists("selPop")){ //population in which selection is occuring
-		defineGlobal("selPop", 1);}
+		defineGlobal("selPop", 2);}
 	
 	if (!exists("selTime")){ // start time of selection
-		defineConstant("selTime", 17000);}
+		defineConstant("selTime", 19500);}
 	
 	if (!exists("selEnd")){ //end time of selection
 		defineConstant("selEnd", 20000);}
@@ -28,16 +28,16 @@ initialize() {
 	if (!exists("cF")){ //conditional frequency
 		defineConstant("cF", 1.0);}
 	
-	if (!exists("cFTime")){ // time to check if conditional frequency has been reached
-		defineConstant("cFTime", 17500);}
+	if (!exists("admixTime")){ // time to check if conditional frequency has been reached
+		defineConstant("admixTime", 20000);}
 	
 	if (!exists("admix")){ // admixture proportion
-		defineConstant("admix", 0.0);}
+		defineConstant("admix", 0.3);}
 	
 	if (!exists("rep")){ // replicate number
 		defineConstant("rep", 0);}
 	
-	defineGlobal("label", paste0(rep,"_s",s,"_sT",selTime,"_sE", selEnd,"_sP",selPop, "_cF", cF, "_cFT",cFTime,"_admix",admix,"_sSize", sampleSize)); // create label 
+	defineGlobal("label", paste0(rep,"_s",s,"_sT",selTime,"_sE", selEnd,"_sP",selPop, "_cF", cF, "_admixTime",admixTime,"_admix",admix,"_sSize", sampleSize)); // create label 
 	
 	
 	// m1 mutation type: selected mutation
@@ -69,43 +69,44 @@ initialize() {
 }
 
 
-19000 late(){
-	if (admix!=0){ // if there is admixture, have individual migrate
-		p2.setMigrationRates(p1, admix);
-	}}
 late(){
-	modSel=sim.cycle%selTime; // check is selection should start
-	if(modSel==(selTime-1)){
-		sim.treeSeqOutput(paste0(path,"tmp",label,".trees"));} // save tree incase cF is not reached and need to restart
-	if (modSel==0){ // at time of selection
-		selInd=sample(sim.subpopulations[selPop].individuals, 1); //sample 1 individual from the select population
-		selInd.genome1.addNewDrawnMutation(m1, 5e6, originSubpop=selPop); // add single selected mutation to the selected individual
-	}
+	defineGlobal("gen", sim.cycle);
 	
-	if (sim.cycle==selEnd){ // when selection ends set selection coefficient to 0
-		sim.mutationsOfType(m1).setSelectionCoeff(0.0);
-	}
-	
-	if(sim.cycle%2500==0){ // every 2500 indidvuals rememeber in tree, sampleSize number of individuals from each population present
-		for (p in sim.subpopulations){
-			rInd=sample(p.individuals, sampleSize);
-			sim.treeSeqRememberIndividuals(rInd);
+	if (admix!=0){ // if there is admixture, have individual migrate as single pulse
+		if (gen==admixTime){
+			p2.setMigrationRates(p1, admix);}
+		if (gen==(admixTime+1)){ // if there is admixture, have individual migrate
+			p2.setMigrationRates(p1, 0.0);
 		}
-	}
-	
-	if (s>0.0){if (sim.cycle>selTime){ // if selection is acting
-			if(size(sim.mutations)==0){ // ichekc if there are still selected mutations present
-				sim.readFromPopulationFile(paste0(path,"tmp",label,".trees")); // if no restart sim
+		
+		modSel=gen%selTime; // check is selection should start
+		if(modSel==(selTime-1)){
+			sim.treeSeqOutput(paste0(path,"tmp",label,".trees"));} // save tree incase cF is not reached and need to restart
+		if (modSel==0){ // at time of selection
+			selInd=sample(sim.subpopulations[selPop].individuals, 1); //sample 1 individual from the select population
+			selInd.genome1.addNewDrawnMutation(m1, 5e6, originSubpop=selPop); // add single selected mutation to the selected individual
+		}
+		
+		if (sim.cycle==selEnd){ // when selection ends set selection coefficient to 0
+			sim.mutationsOfType(m1).setSelectionCoeff(0.0);
+		}
+		
+		if(gen%2500==0){ // every 2500 indidvuals rememeber in tree, sampleSize number of individuals from each population present
+			for (p in sim.subpopulations){
+				rInd=sample(p.individuals, sampleSize);
+				sim.treeSeqRememberIndividuals(rInd);
 			}
-			if (sim.cycle==cFTime){ // at time to check condition frequency
-				if (sim.mutationFrequencies(sim.subpopulations[selPop]) < cF){ // if selection mutation is less than the condition frequency restart the simulation
-					
-					sim.readFromPopulationFile(paste0(path,"tmp",label,".trees"));
-				}}
+		}
+		
+		if (s>0.0){if (gen>selTime){ // if selection is acting
+				if(size(sim.mutations)==0){ // ichekc if there are still selected mutations present
+					sim.readFromPopulationFile(paste0(path,"tmp",label,".trees")); // if no restart sim
+				}
+			}
 		}
 	}
 }
-//
+
 
 
 20001 late(){ // end simulation and output final tree
