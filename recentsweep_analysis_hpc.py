@@ -1,3 +1,5 @@
+import numba
+import lmdb
 import sys
 import msprime
 import pyslim
@@ -12,7 +14,6 @@ import pandas as pd
 #path to output files
 path=sys.argv[6]
 #path="/Users/olivia/Documents/arg_selection/"
-
 
 os.chdir(path)
 # path to github repository
@@ -36,7 +37,7 @@ admixture=sys.argv[5] ## admixture proportion set to 0 to turn admixture off
 rep=sys.argv[1] # replicate number
 
 ## create parameter label (replicate number_selection coefficient_initation of selection_end of selection_conditional frequency_time to meet conditional frequency_admixture proportion_sample size)
-for s in [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8]: ## test varying s
+for s in [0.0,0.02,0.05,0.1,0.2]: ## test varying s
     params="{6}_s{0}_sT{1}_sE{2}_sP{3}_cF{4}_cFT{8}_admix{5}_sSize{7}".format(s,selTime, selEnd,selPop, cF, admixture,rep,sampleSize,cFTime)
     
     #check if simultion file already existis, if not simulate demography
