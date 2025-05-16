@@ -85,5 +85,5 @@ plot = ggplot(ROC_data[admixture==0&cF==1.0][order(FPR, TPR)],
   theme_bw() + labs(col="Selection\nCoefficient")+ lims(x=c(0,1), y=c(0,1))+
    scale_colour_manual(values = cbp1) +ggtitle("ROC curve - no admixture, conditional frequency 1")
 plot
-ggsave(filename="ROC_noadmix.pdf", plot, width = 18, height =10)
+ggsave(filename="ROC_noadmix.pdf", plot, width = 12, height =8)
 ggsave(filename="ROC_noadmix.jpg", plot, width = 18, height =10)
