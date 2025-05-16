@@ -7,22 +7,25 @@ import tskit
 import numpy as np
 import pandas as pd
 import itertools
+import matplotlib.pyplot as plt
 import statistics
 from IPython.display import SVG
-
-# path to github repository
-sys.path.insert(1, "/Users/olj5016/arg_selection/")
-#sys.path.insert(1, "/Users/olivia/arg_selection/")
-import glike
-import estimate
-import miscellaneous
-# import dnisearch
-# import hsearch
+import cairosvg
 
 #path to output files
 path="/Users/olj5016/Documents/arg_selection/"
 #path="/Users/olivia/Documents/arg_selection/"
+
+
 os.chdir(path)
+# path to github repository
+sys.path.insert(1, "/Users/olj5016/glike/glike/")
+#sys.path.insert(1, "/Users/olivia/arg_selection/")
+import glike
+import estimate
+import miscellaneous
+import dnisearch
+import hsearch
 
 
 Ne=10000 # unscaled Ne
@@ -31,17 +34,17 @@ mr=1e-8 # unscaled mutation rate
 s=1.0 # selection coefficient (0.0 for neutral)
 sampleSize=100 # number of indidivuals remebered in tree per generation
 selPop=2 # subset value for subpopulation in SLiM 2 for p2, 4 for p22
-selTime=19000 # time of selection (generations)
-selEnd=19500 # time of selection (generations)
-cF = 0.8 # conditional frequency of selected allele (only active when s>0.0)
-admixTime = 0.0 ## time to check conditional frequency
-admixture=0.000000 ## admixture proportion set to 0 to turn admixture off
+selTime=19500 # time of selection (generations)
+selEnd=20000 # time of selection (generations)
+cF = 1.0 # conditional frequency of selected allele (only active when s>0.0)
+cFTime = 20000 ## time to check conditional frequency
+admixture=0.3 ## admixture proportion set to 0 to turn admixture off
 rep=0 # replicate number
-
-for s in [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8, 0.9, 1.0]: ## test varying s
+for rep in range (1, 10):
+    for s in [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8]: ## test varying s
     ## create parameter label (replicate number_selection coefficient_initation of selection_end of selection_conditional frequency_time to meet conditional frequency_admixture proportion_sample size)
     
-        params="{5}_s{0}_sT{1}_sE{2}_sP{3}_admixTime{7}_admix{4}_sSize{6}".format(s,selTime, selEnd,selPop, admixture,rep,sampleSize,admixTime)
+        params="{6}_s{0}_sT{1}_sE{2}_sP{3}_cF{4}_cFT{8}_admix{5}_sSize{7}".format(s,selTime, selEnd,selPop, cF, admixture,rep,sampleSize,cFTime)
         
         #check if simultion file already existis, if not simulate demography
         if os.path.isfile("{0}simplegross_{1}.trees".format(path,params))==False:
@@ -53,8 +56,7 @@ for s in [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8, 0.9, 1.0]: ## test varying s
             
             #run slim simulation of simple demography with above paramaters
             #make sure path to slim file is correct (at the end of cmd)
-            results = "path='" + str(path)+ "'"
-            cmd = "slim -d s=" + str(s) + " -d rep="+str(rep)+" -d admix="+ str(admixture)+" -d sampleSize="  + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) +" -d selEnd=" + str(selEnd) +" -d admixTime=" + str(admixTime) + ' -d "' + str(results) + '" ~/arg_selection/simple_gross.slim' 
+            cmd = "slim -d s=" + str(s) + " -d rep="+str(rep)+" -d admix="+ str(admixture)+" -d sampleSize="  + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) +" -d selEnd=" + str(selEnd)  + " -d cF=" + str(cF)+" -d cFTime=" + str(cFTime) + " ~/arg_selection/simple_gross.slim" 
             print(cmd)
             os.system(cmd)
         
@@ -97,28 +99,24 @@ for s in [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8, 0.9, 1.0]: ## test varying s
         mut_ts = msprime.sim_mutations(mod_ts, rate=mr, discrete_genome=True, keep=True)
         
         
-        def simple_demography(tsplit, tend, NeA, NeB, NeC, tSweep, NeSweep):
-            demo=glike.Demo()
-            phase1=glike.Phase(0, tSweep, [1/NeA,1/NeB,1/NeC], P=np.array([[1,0,0],[0,1,0],[0,0,1]]))
-            phase2=glike.Phase(tSweep,tsplit, [1/NeA,1/NeB,1/NeSweep], P=np.array([[1,0,0],[0,1,0],[0,0,1]]))
-            phase3=glike.Phase(tsplit,tend, [1/NeA,1/NeB],  P=np.array([[1,0], [0,1],[0,1]]))
-            phase4=glike.Phase(tend,np.inf, [1/NeA],  P=np.array([[1],[1]]))
-            demo.add_phase(phase1)
-            demo.add_phase(phase2)
-            demo.add_phase(phase3)
-            demo.add_phase(phase4)
+        def simple_demography(NeB, NeC, NeBC, admixture):
+                demo=glike.Demo() # create demography object
+                phase1=glike.Phase(0,1000, [1/20000,1/NeB,1/NeC], P=np.array([[1,0,0],[0,1,0],[0,0,1]])) #final state of population (most recent)
+                phase2=glike.Phase(1000,2500, [1/20000,1/NeB,1/NeC], P=np.array([[1,0,0],[0,1,0],[0,admixture,1-admixture]])) #final state of population (most recent)
+                phase3=glike.Phase(2500,20000, [1/20000,1/NeBC],  P=np.array([[1,0], [0,1],[0,1]])) # intermediate phase split between A and BC (ancestor of B and C)
+                phase4=glike.Phase(20000,np.inf, [1/20000],  P=np.array([[1],[1]])) # initial phase (single lineage)
+                demo.add_phase(phase1)##add phase to demography object
+                demo.add_phase(phase2)##add phase to demography object
+                demo.add_phase(phase3)##add phase to demography object
+                demo.add_phase(phase4)##add phase to demography object
+                
+                return demo # return demography object
             
-            return demo
-            
-        demo=simple_demography(2500, 20000, 20000, 20000, 20000, 500, 20000)
+        demo=simple_demography(20000, 20000, 20000, admixture)
         #set variables
-        tsplit=2500
-        tend=20000
-        NeA=20000
         NeB=20000
         NeC=20000
-        tSweep=1000
-        NeSweep=20000
+        NeBC=20000
             
             
         #check demography
@@ -131,13 +129,13 @@ for s in [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8, 0.9, 1.0]: ## test varying s
         samples = {i:pop for i, pop in enumerate(tmp)}
         
         #create gLike function - pass variables and get likelihood of parameter fit
-        def glike_fun(tsplit, tend, NeA, NeB, NeC, tSweep, NeSweep):
-            demo = simple_demography(tsplit, tend, NeA, NeB, NeC, tSweep, NeSweep)
+        def glike_fun( NeB, NeC, NeBC, admix):
+            demo = simple_demography(NeB, NeC, NeBC, admix)
             return glike.glike_trees(trees, demo, samples, kappa=10000)  #return likelihood
         
-        glike_x0 = {"tsplit":tsplit, "tend":tend, "NeA":NeA, "NeB":NeB,"NeC":NeC, "tSweep":tSweep, "NeSweep":NeSweep} # dict of initial values to start estimating from
+        glike_x0 = {"NeB":NeB,"NeC":NeC, "NeBC":NeBC, "admix":admix} # dict of initial values to start estimating from
         
-        modern_bounds = [(tsplit,tsplit),(tend,tend),(NeA,NeA), (NeB,NeB), (NeC, NeC), (0,tend),(0,10*Ne)] # set bounds for estimation values, all fixed expet Ne of interest
+        modern_bounds = [ (NeB,NeB), (0,10*Ne),(NeBC,NeBC), (admix,admix)] # set bounds for estimation values, all fixed expet Ne of interest
         
          
         win=[] # vec of optimized parameter values
