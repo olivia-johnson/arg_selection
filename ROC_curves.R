@@ -40,8 +40,8 @@ for (m in unique(data$method)) {
     for (l in unique(data$lab)) {
       neutral = data[selCoeff == 0.0 & method == m  & lab == l]
       selection = data[selCoeff == s & method == m & lab == l]
-      if (neutral[,.N]!=10){print(paste("Neutral", l, "only", neutral[,.N], "replicates - Missing rep", setdiff(0:9, neutral$rep)))}
-      if (selection[,.N]!=10){print(paste("Sel", s, l, "only", neutral[,.N], "replicates- Missing rep", setdiff(0:9, selection$rep)))}
+      if (neutral[Pos==25000,.N]!=10){print(paste("Neutral", l, "only", neutral[Pos==25000,.N], "replicates - Missing rep", (setdiff(0:9, unique(neutral$rep)))))}
+      if (selection[Pos==25000,.N]!=10){print(paste("Sel", s, l, "only", selection[Pos==25000,.N], "replicates- Missing rep", (setdiff(0:9, unique(selection$rep)))))}
     }}}
       
 ## Calc TPR and FPR     
@@ -68,7 +68,7 @@ for (m in unique(data$method)) {
         FPR[i] = ifelse(FP + TN == 0, 0, 1 - (TN / (FP + TN)))
         TPR[i] = ifelse(TP + FN == 0, 0, TP / (TP + FN))
       }
-      dt = data.table(selCoeff = s, method = m, lab = l, selStart=unique(selection$selStart),selEnd=unique(selection$selEnd),Threshold = LR_cutoff, FPR = FPR, TPR = TPR)
+      dt = data.table(selCoeff = s, method = m, lab = l, selStart=unique(selection$selStart),selEnd=unique(selection$selEnd),cF=unique(selection$condFreq),admixture=unique(selection$admix),Threshold = LR_cutoff, FPR = FPR, TPR = TPR)
       ROC_data[[paste(s, m, l, sep = "_")]] = dt
     }
   }
@@ -78,12 +78,12 @@ ROC_data=rbindlist((ROC_data))
 cbp1 <- c("#000000", "#E69F00", "#0072B2", "#009E73",
           "#CC79A7","#F0E442", "#56B4E9", "#D55E00", "purple", "#882255")
 
-plot = ggplot(ROC_data[order(FPR, TPR)], 
+plot = ggplot(ROC_data[admixture==0&cF==1.0][order(FPR, TPR)], 
        aes(FPR, TPR, color = as.character(selCoeff))) + 
   scale_linetype_manual(values = c(1, 6)) +
   geom_line() + facet_grid(selStart+selEnd + method~ selCoeff, scales = "free") +
-  theme_bw() + labs(col="Selection\nCoefficient")+
-   scale_colour_manual(values = cbp1) +ggtitle("ROC curve - no admixture")
+  theme_bw() + labs(col="Selection\nCoefficient")+ lims(x=c(0,1), y=c(0,1))+
+   scale_colour_manual(values = cbp1) +ggtitle("ROC curve - no admixture, conditional frequency 1")
 plot
 ggsave(filename="ROC_noadmix.pdf", plot, width = 18, height =10)
 ggsave(filename="ROC_noadmix.jpg", plot, width = 18, height =10)
