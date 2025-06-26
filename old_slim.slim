@@ -1,0 +1,114 @@
+// set up a simple neutral simulationMore actions
+initialize() {
+	initializeTreeSeq();
+
+	initializeMutationRate(0.0); // no mutation of selected alleles
+
+	if (!exists("path")){ //path for output
+		defineConstant("path", "~/Documents/arg_selection/");}
+
+	if (!exists("s")){ //scaled selection coefficient
+		defineConstant("s", 1.0);}
+
+	if (!exists("sampleSize")){ // sample size
+		defineConstant("sampleSize", 100);}
+
+	if (!exists("popSize")){ // population size
+		defineConstant("popSize", 10000);}
+
+	if (!exists("selPop")){ //population in which selection is occuring
+		defineGlobal("selPop", 1);}
+
+	if (!exists("selTime")){ // start time of selection
+		defineConstant("selTime", 17000);}
+
+	if (!exists("selEnd")){ //end time of selection
+		defineConstant("selEnd", 20000);}
+
+	if (!exists("cF")){ //conditional frequency
+		defineConstant("cF", 1.0);}
+
+	if (!exists("cFTime")){ // time to check if conditional frequency has been reached
+		defineConstant("cFTime", 17500);}
+
+	if (!exists("admix")){ // admixture proportion
+		defineConstant("admix", 0.0);}
+
+	if (!exists("rep")){ // replicate number
+		defineConstant("rep", 0);}
+
+	defineGlobal("label", paste0(rep,"_s",s,"_sT",selTime,"_sE", selEnd,"_sP",selPop, "_cF", cF, "_cFT",cFTime,"_admix",admix,"_sSize", sampleSize)); // create label 
+
+
+	// m1 mutation type: selected mutation
+	initializeMutationType("m1", 0.5, "f", s); // selected mutations
+
+	m1.color="pink";
+
+
+	// g1 genomic element type: uses m1 for all mutations
+	initializeGenomicElementType("g1", m1, 1.0);
+
+	// uniform chromosome of length 10Mb with uniform recombination
+	initializeGenomicElement(g1, 0, 9999999);
+	initializeRecombinationRate(1e-7);
+}
+1 late() { // read in coalescent burnin to ensure lineages coalesce
+	sim.readFromPopulationFile(paste0(path, "burnin_simple_",label,".trees"));
+}
+
+
+2 early() { // split p0 (A) into p0 (A) and p1 (BC)
+	sim.addSubpopSplit("p1", popSize, p0);
+
+}
+
+17500 late(){ // split p1 (BC) into p1 (B) and p2 (C)
+	sim.addSubpopSplit("p2", popSize, p1);
+	//
+}
+
+
+19000 late(){
+	if (admix!=0){ // if there is admixture, have individual migrate
+		p2.setMigrationRates(p1, admix);
+	}}
+late(){
+	modSel=sim.cycle%selTime; // check is selection should start
+	if(modSel==(selTime-1)){
+		sim.treeSeqOutput(paste0(path,"tmp",label,".trees"));} // save tree incase cF is not reached and need to restart
+	if (modSel==0){ // at time of selection
+		selInd=sample(sim.subpopulations[selPop].individuals, 1); //sample 1 individual from the select population
+		selInd.genome1.addNewDrawnMutation(m1, 5e6, originSubpop=selPop); // add single selected mutation to the selected individual
+	}
+	
+	if (sim.cycle==selEnd){ // when selection ends set selection coefficient to 0
+		sim.mutationsOfType(m1).setSelectionCoeff(0.0);
+	}
+	
+	if(sim.cycle%2500==0){ // every 2500 indidvuals rememeber in tree, sampleSize number of individuals from each population present
+		for (p in sim.subpopulations){
+			rInd=sample(p.individuals, sampleSize);
+			sim.treeSeqRememberIndividuals(rInd);
+		}
+	}
+	
+	if (s>0.0){if (sim.cycle>selTime){ // if selection is acting
+			if(size(sim.mutations)==0){ // ichekc if there are still selected mutations present
+				sim.readFromPopulationFile(paste0(path,"tmp",label,".trees")); // if no restart sim
+			}
+			if (sim.cycle==cFTime){ // at time to check condition frequency
+				if (sim.mutationFrequencies(sim.subpopulations[selPop]) < cF){ // if selection mutation is less than the condition frequency restart the simulation
+					
+					sim.readFromPopulationFile(paste0(path,"tmp",label,".trees"));
+				}}
+		}
+	}
+}
+//
+
+
+20001 late(){ // end simulation and output final tree
+	sim.treeSeqOutput(paste0(path,"simplegross_",label,".trees"));
+
+}
