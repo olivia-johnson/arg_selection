@@ -136,7 +136,7 @@ def glike_fun(tsplit, tend, NeA, NeB, NeC, tSweep, NeSweep):
 
 glike_x0 = {"tsplit":tsplit, "tend":tend, "NeA":NeA, "NeB":NeB,"NeC":NeC, "tSweep":tSweep, "NeSweep":NeSweep} # dict of initial values to start estimating from
 
-modern_bounds = [(tsplit,tsplit),(tend,tend),(NeA,NeA), (NeB,NeB), (NeC,NeC),(0,20000), (0,10*Ne)] # set bounds for estimation values, all fixed expet Ne of interest
+modern_bounds = [(tsplit,tsplit),(tend,tend),(NeA,NeA), (NeB,NeB), (NeC,NeC),(0,tsplit), (0,10*Ne)] # set bounds for estimation values, all fixed expet Ne of interest
 
 
 win=[] # vec of optimized parameter values
