@@ -36,7 +36,7 @@ sampleSize=100 # number of indidivuals remebered in tree per generation
 selPop=2 # subset value for subpopulation in SLiM 2 for p2, 4 for p22
 selTime=19500 # time of selection (generations)
 selEnd=20000 # time of selection (generations)
-cF = 1.0 # conditional frequency of selected allele (only active when s>0.0)
+cF = 0.01 # conditional frequency of selected allele (only active when s>0.0)
 cFTime = 20000 ## time to check conditional frequency
 admixture=0.000000 ## admixture proportion set to 0 to turn admixture off
 rep=0 # replicate number
@@ -54,7 +54,8 @@ if os.path.isfile("{0}simplegross_{1}.trees".format(path,params))==False:
     burnin_ts.dump("{0}burnin_simple_{1}.trees".format(path,params))
 
     #run slim simulation of simple demography with above paramaters
-    cmd = "slim -d s=" + str(s) + " -d rep="+str(rep)+" -d admix="+ str(admixture)+" -d sampleSize=" + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) +" -d selEnd=" + str(selEnd)  + " -d cF=" + str(cF)+" -d cFTime=" + str(cFTime) + " ~/arg_selection/old_slim.slim" #make sure path to slim file is correct
+    results = "path='" + str(path)+ "'"
+    cmd = "slim -d s=" + str(s) + " -d rep="+str(rep)+" -d admix="+ str(admixture)+" -d sampleSize=" + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) +" -d selEnd=" + str(selEnd)  + " -d cF=" + str(cF)+" -d cFTime=" + str(cFTime) + ' -d "' + str(results) + '" ~/arg_selection/old_slim.slim' #make sure path to slim file is correct
     print(cmd)
     os.system(cmd)
 
@@ -106,10 +107,9 @@ def simple_demography(tsplit, tend, NeA, NeB, NeC, tSweep, NeSweep):
       demo.add_phase(phase2)
       demo.add_phase(phase3)
       demo.add_phase(phase4)
-      
       return demo
 
-demo=simple_demography(2500, 20000, 20000, 20000, 20000, 500, 2000)
+demo=simple_demography(2501, 20000, 20000, 20000, 20000, 500, 2000)
 #set variables
 tsplit=2500
 tend=20000

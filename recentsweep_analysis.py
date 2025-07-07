@@ -23,7 +23,7 @@ os.chdir(path)
 Ne=10000 # unscaled Ne
 rr=1e-7 # unscaled recombination rate
 mr=1e-8 # unscaled mutation rate
-s=0 # selection coefficient (0.0 for neutral)
+s=0.02 # selection coefficient (0.0 for neutral)
 sampleSize=100 # number of indidivuals remebered in tree per generation
 selPop=2 # subset value for subpopulation in SLiM 2 for p2, 4 for p22
 selTime=19950 # time of selection (generations)
