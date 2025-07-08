@@ -111,7 +111,7 @@ for s in [0.02,0.05,0.1,0.2]: ## test varying s
     NeB=20000
     NeC=20000
     NeSweep=20000
-    tSweep=500
+    tSweep=50
 
 
     #check demography
