@@ -28,16 +28,13 @@ initialize() {
 	if (!exists("cF")){ //conditional frequency
 		defineConstant("cF", 1.0);}
 
-	if (!exists("cFTime")){ // time to check if conditional frequency has been reached
-		defineConstant("cFTime", 17500);}
-
 	if (!exists("admix")){ // admixture proportion
 		defineConstant("admix", 0.0);}
 
 	if (!exists("rep")){ // replicate number
 		defineConstant("rep", 0);}
 
-	defineGlobal("label", paste0(rep,"_s",s,"_sT",selTime,"_sE", selEnd,"_sP",selPop, "_cF", cF, "_cFT",cFTime,"_admix",admix,"_sSize", sampleSize)); // create label 
+	defineGlobal("label", paste0(rep,"_s",s,"_sT",selTime,"_sE", selEnd,"_sP",selPop, "_cF", cF, "_admix",admix,"_sSize", sampleSize)); // create label 
 
 
 	// m1 mutation type: selected mutation
@@ -97,7 +94,7 @@ late(){
 			if(size(sim.mutations)==0){ // ichekc if there are still selected mutations present
 				sim.readFromPopulationFile(paste0(path,"tmp",label,".trees")); // if no restart sim
 			}
-			if (sim.cycle==cFTime){ // at time to check condition frequency
+			if (sim.cycle==20000){ // at time to check condition frequency
 				if (sim.mutationFrequencies(sim.subpopulations[selPop]) < cF){ // if selection mutation is less than the condition frequency restart the simulation
 					
 					sim.readFromPopulationFile(paste0(path,"tmp",label,".trees"));

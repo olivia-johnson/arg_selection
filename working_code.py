@@ -31,19 +31,18 @@ import miscellaneous
 Ne=10000 # unscaled Ne
 rr=1e-7 # unscaled recombination rate
 mr=1e-8 # unscaled mutation rate
-s=1.0 # selection coefficient (0.0 for neutral)
+s=0.01 # selection coefficient (0.0 for neutral)
 sampleSize=100 # number of indidivuals remebered in tree per generation
 selPop=2 # subset value for subpopulation in SLiM 2 for p2, 4 for p22
 selTime=19500 # time of selection (generations)
 selEnd=20000 # time of selection (generations)
 cF = 0.01 # conditional frequency of selected allele (only active when s>0.0)
-cFTime = 20000 ## time to check conditional frequency
 admixture=0.000000 ## admixture proportion set to 0 to turn admixture off
 rep=0 # replicate number
 
 ## create parameter label (replicate number_selection coefficient_initation of selection_end of selection_conditional frequency_time to meet conditional frequency_admixture proportion_sample size)
 
-params="{6}_s{0}_sT{1}_sE{2}_sP{3}_cF{4}_cFT{8}_admix{5}_sSize{7}".format(s,selTime, selEnd,selPop, cF, admixture,rep,sampleSize,cFTime)
+params="{6}_s{0}_sT{1}_sE{2}_sP{3}_cF{4}_admix{5}_sSize{7}".format(s,selTime, selEnd,selPop, cF, admixture,rep,sampleSize)
 
 #check if simultion file already existis, if not simulate demography
 if os.path.isfile("{0}simplegross_{1}.trees".format(path,params))==False:
@@ -55,7 +54,7 @@ if os.path.isfile("{0}simplegross_{1}.trees".format(path,params))==False:
 
     #run slim simulation of simple demography with above paramaters
     results = "path='" + str(path)+ "'"
-    cmd = "slim -d s=" + str(s) + " -d rep="+str(rep)+" -d admix="+ str(admixture)+" -d sampleSize=" + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) +" -d selEnd=" + str(selEnd)  + " -d cF=" + str(cF)+" -d cFTime=" + str(cFTime) + ' -d "' + str(results) + '" ~/arg_selection/old_slim.slim' #make sure path to slim file is correct
+    cmd = "slim -d s=" + str(s) + " -d rep="+str(rep)+" -d admix="+ str(admixture)+" -d sampleSize=" + str(sampleSize)+ " -d selPop=" + str(selPop)+ " -d selTime=" + str(selTime) +" -d selEnd=" + str(selEnd)  + " -d cF=" + str(cF)+ ' -d "' + str(results) + '" ~/arg_selection/old_slim.slim' #make sure path to slim file is correct
     print(cmd)
     os.system(cmd)
 
